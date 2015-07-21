@@ -158,6 +158,8 @@ which_phase_kid<-function(haplotype,kidwin){
     #log(probs[[2]][three_genotypes,kidwin] is the log prob. of kid's obs geno 
     #given the current phased geno and given mom is het. (which is why probs[[2]])
     geno_probs[geno]=sum( sapply(1:length(haplotype), function(zz) log( probs[[2]][three_genotypes[[geno]][zz]+1,kidwin[zz]+1])))
+    geno_probs[geno]=sum( sapply(1:length(haplotype), function(zz) log( probs[[2]][three_genotypes[[geno]][zz]+1,kidwin[zz]+1])))    
+  
   }
   if(length(which(geno_probs==max(geno_probs)))!=1){browser()}
   return(three_genotypes[[which(geno_probs==max(geno_probs))]])
