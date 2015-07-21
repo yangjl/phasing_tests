@@ -1,9 +1,6 @@
-##get command line args
-options(echo=TRUE) # if you want see commands in output file
-args <- commandArgs(trailingOnly = TRUE)
-
 #Do several sims
 ## Get functions
+setwd("~/projects/phasing_tests")
 source("phasekids.R")
 
 ## Params and probabilities
@@ -11,13 +8,12 @@ source("phasekids.R")
 size.array=20 # size of progeny array
 het.error=0.7 # het->hom error
 hom.error=0.002 # hom->other error
-numloci=1000
+numloci=500
 win_length=10 # size of window to phase
 sims=1
 errors.correct=TRUE # can assume we know error rates or not
 freqs.correct=TRUE # can assume we know freqs or not
-crossovers=args[1] # mean expected crossovers per chromosome; 0 = no recombination
-job=args[2]
+crossovers=0.03 # mean expected crossovers per chromosome; 0 = no recombination
 
 #### Set up the neutral SFS \& Probabilities
 x=1:99/100 #0.01 bins of freq.
@@ -74,4 +70,3 @@ for(mysim in 1:sims){
 	mean.kid.geno.errors[mysim]=mean.kid.geno.errors[mysim]/numloci
 }
 results=c(mean(mom.gen.errors),mean(mom.phase.errors),mean(mean.kid.geno.errors))
-write.table(file=paste("./out/out.",crossovers,".",job,".txt",sep=""),t(results),quote=F,col.names=FALSE,row.names=FALSE)

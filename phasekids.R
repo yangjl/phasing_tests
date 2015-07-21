@@ -9,8 +9,9 @@ ran.hap=function(numloci,p){sapply(1:numloci,function(x) rbinom(1,1,p[x]))}
 ############################################################################
 
 # Copy mom to kids with recombination
-copy.mom=function(mom,rec){ 
-  co=rpois(1,1.5) #crossovers
+# testing version to identify recombinants
+copy.mom=function(mom,co_mean){ 
+  co=rpois(1,co_mean) #crossovers
   numloci=length(mom[[1]])
   rec=c(1,sort(round(runif(co,2,numloci-1))),numloci+1) #position   
   chrom=rbinom(1,1,.5)+1
@@ -20,21 +21,6 @@ copy.mom=function(mom,rec){
     chrom=ifelse(chrom==1,2,1)  
   }     
   return(kpiece)
-}
-############################################################################
-
-
-############################################################################
-#Add error to diploid
-#Error model assumes errors have equal likelihood of being called either alternative genotype.
-add_error<-function(diploid,hom.error,het.error){
-    hets_with_error=sample(which(diploid==1),round(het.error*length(which(diploid==1))))
-    hom0_with_error=sample(which(diploid==0),round(hom.error*length(which(diploid==0))))
-    hom2_with_error=sample(which(diploid==2),round(hom.error*length(which(diploid==2))))
-    diploid=replace(diploid,hets_with_error,sample(c(0,2),length(hets_with_error),replace=T)  )
-    diploid=replace(diploid,hom0_with_error,sample(c(1,2),length(hom0_with_error),replace=T)  )
-    diploid=replace(diploid,hom2_with_error,sample(c(1,0),length(hom2_with_error),replace=T)  )
-    return(diploid)
 }
 ############################################################################
 
@@ -54,6 +40,21 @@ kid=function(mom,dad,het.error,hom.error,rec=1.5){
     return(list(true_kid,obs_kid))
 }
 ############################################################################
+
+############################################################################
+#Add error to diploid
+#Error model assumes errors have equal likelihood of being called either alternative genotype.
+add_error<-function(diploid,hom.error,het.error){
+  hets_with_error=sample(which(diploid==1),round(het.error*length(which(diploid==1))))
+  hom0_with_error=sample(which(diploid==0),round(hom.error*length(which(diploid==0))))
+  hom2_with_error=sample(which(diploid==2),round(hom.error*length(which(diploid==2))))
+  diploid=replace(diploid,hets_with_error,sample(c(0,2),length(hets_with_error),replace=T)  )
+  diploid=replace(diploid,hom0_with_error,sample(c(1,2),length(hom0_with_error),replace=T)  )
+  diploid=replace(diploid,hom2_with_error,sample(c(1,0),length(hom2_with_error),replace=T)  )
+  return(diploid)
+}
+############################################################################
+
 
 ############################################################################
 # Return HW probs
