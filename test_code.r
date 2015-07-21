@@ -11,12 +11,12 @@ source("phasekids.R")
 size.array=20 # size of progeny array
 het.error=0.7 # het->hom error
 hom.error=0.002 # hom->other error
-numloci=1000
+numloci=500
 win_length=10 # size of window to phase
 sims=1
-errors.correct=TRUE # can assume we know error rates or not
-freqs.correct=TRUE # can assume we know freqs or not
-crossovers=args[1] # mean expected crossovers per chromosome; 0 = no recombination
+errors.correct=FALSE # can assume we know error rates or not
+freqs.correct=FALSE # can assume we know freqs or not
+crossovers=as.numeric(args[1]) # mean expected crossovers per chromosome; 0 = no recombination
 job=args[2]
 
 #### Set up the neutral SFS \& Probabilities
@@ -63,13 +63,14 @@ for(mysim in 1:sims){
 	#MOM PHASE
   	newmom=phase_mom(estimated_mom,progeny,win_length)
   	hets=which(true_mom[[1]]+true_mom[[2]]==1)
-  	mom.phase.errors[mysim]=min(sum(abs(newmom-true_mom[[1]][hets])),sum(abs(newmom-true_mom[[2]][hets])))/length(hets)
+  	mom.phase.errors[mysim]=min(sum(abs(estimated_mom[hets]-true_mom[[1]][hets])),sum(abs(estimated_mom[hets]-true_mom[[2]][hets])))/length(hets)
 	#KIDS GENOS
 	inferred_progeny=list()
+  estimated_hets=which(estimated_mom==1)
 	mean.kid.geno.errors[mysim]=0;
 	for(z in 1:length(progeny)){
-		inferred_progeny[[z]]=which_phase_kid(newmom,progeny[[z]][[2]][hets] )
-		mean.kid.geno.errors[mysim]=mean.kid.geno.errors[mysim]+(sum(abs(progeny[[z]][[1]][hets]-inferred_progeny[[z]])))/length(progeny)
+		inferred_progeny[[z]]=which_phase_kid(newmom,progeny[[z]][[2]][estimated_hets] )
+		mean.kid.geno.errors[mysim]=mean.kid.geno.errors[mysim]+(sum(abs(progeny[[z]][[1]][estimated_hets]-inferred_progeny[[z]])))/length(progeny)
 	}
 	mean.kid.geno.errors[mysim]=mean.kid.geno.errors[mysim]/numloci
 }
