@@ -10,10 +10,11 @@ ran.hap=function(numloci,p){sapply(1:numloci,function(x) rbinom(1,1,p[x]))}
 
 # Copy mom to kids with recombination
 # testing version to identify recombinants
-copy.mom=function(mom,co_mean){ 
+copy.mom=function(mom,co_mean,progeny){ 
   co=rpois(1,co_mean) #crossovers
   numloci=length(mom[[1]])
   rec=c(1,sort(round(runif(co,2,numloci-1))),numloci+1) #position   
+  write.table(file="rec.log",t(c(progeny,rec)),row.names=FALSE,col.names=FALSE,quote=FALSE,append=TRUE)
   chrom=rbinom(1,1,.5)+1
   kpiece=as.numeric()
   for(r in 1:(length(rec)-1)){
@@ -27,13 +28,13 @@ copy.mom=function(mom,co_mean){
 ############################################################################
 # Make a kid
 #Returns list of true [[1]] and observed [[2]] kid
-kid=function(mom,dad,het.error,hom.error,rec=1.5){
+kid=function(mom,dad,het.error,hom.error,rec=1.5,dude){
     if(rec==0){
       k1=mom[[rbinom(1,1,.5)+1]]
       k2=dad[[rbinom(1,1,.5)+1]]
     } else{
-      k1=copy.mom(mom,rec)
-      k2=copy.mom(dad,rec)
+      k1=copy.mom(mom,rec,dude)
+      k2=copy.mom(dad,rec,dude)
     }
     true_kid=k1+k2
     obs_kid=add_error(true_kid,hom.error,het.error)

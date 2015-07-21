@@ -13,7 +13,7 @@ win_length=10 # size of window to phase
 sims=1
 errors.correct=TRUE # can assume we know error rates or not
 freqs.correct=TRUE # can assume we know freqs or not
-crossovers=0.03 # mean expected crossovers per chromosome; 0 = no recombination
+crossovers=0 # mean expected crossovers per chromosome; 0 = no recombination
 
 #### Set up the neutral SFS \& Probabilities
 x=1:99/100 #0.01 bins of freq.
@@ -51,7 +51,7 @@ for(mysim in 1:sims){
   	true_mom=list(a1,a2) #phased 
   	obs_mom=add_error(a1+a2,hom.error,het.error) #convert to diploid genotype
   	progeny<-vector("list",size.array)
-  	progeny<-lapply(1:size.array, function(a) kid(true_mom,true_mom,het.error,hom.error,crossovers))
+  	progeny<-lapply(1:size.array, function(a) kid(true_mom,true_mom,het.error,hom.error,crossovers,a))
   
 	#MOM GENO
   	estimated_mom=sapply(1:numloci, function(a) infer_mom(obs_mom,a,progeny,p) ) 
@@ -70,3 +70,8 @@ for(mysim in 1:sims){
 	mean.kid.geno.errors[mysim]=mean.kid.geno.errors[mysim]/numloci
 }
 results=c(mean(mom.gen.errors),mean(mom.phase.errors),mean(mean.kid.geno.errors))
+#only for testing
+for(z in 1:length(progeny)){
+  errors=sum(abs(progeny[[z]][[1]][hets]-inferred_progeny[[z]]))/length(progeny)
+  print(errors)
+}
