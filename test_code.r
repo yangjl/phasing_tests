@@ -66,7 +66,7 @@ for(mysim in 1:sims){
   	mom.phase.errors[mysim]=min(sum(abs(estimated_mom[hets]-true_mom[[1]][hets])),sum(abs(estimated_mom[hets]-true_mom[[2]][hets])))/length(hets)
 	#KIDS GENOS
 	inferred_progeny=list()
-  estimated_hets=which(estimated_mom==1)
+  	estimated_hets=which(estimated_mom==1)
 	mean.kid.geno.errors[mysim]=0;
 	for(z in 1:length(progeny)){
 		inferred_progeny[[z]]=which_phase_kid(newmom,progeny[[z]][[2]][estimated_hets] )
