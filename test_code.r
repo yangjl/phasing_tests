@@ -5,7 +5,7 @@ source("phasekids.R")
 
 ## Params and probabilities
 #### Real Parameters 
-size.array=15 # size of progeny array
+size.array=5 # size of progeny array
 het.error=0.7 # het->hom error
 hom.error=0.002 # hom->other error
 numloci=500
