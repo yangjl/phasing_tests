@@ -11,10 +11,8 @@ ran.hap=function(numloci,p){sapply(1:numloci,function(x) rbinom(1,1,p[x]))}
 # Copy mom to kids with recombination
 copy.mom=function(mom,rec){ 
   co=rpois(1,1.5) #crossovers
- # print(co)
   numloci=length(mom[[1]])
   rec=c(1,sort(round(runif(co,2,numloci-1))),numloci+1) #position   
-#  print(rec)
   chrom=rbinom(1,1,.5)+1
   kpiece=as.numeric()
   for(r in 1:(length(rec)-1)){
@@ -117,7 +115,7 @@ phase_mom<-function(mom,progeny,win_length){
   win_hap=as.numeric()
   old_hap=as.numeric() 
   for(winstart in 1:(length(hetsites)-(win_length-1))){
-    #print(paste(winstart,"...")) 
+    print(winstart)
     momwin=hetsites[winstart:(winstart+win_length-1)]
     if(winstart==1){ #arbitrarily assign win_hap to one chromosome initially
       win_hap=infer_dip(momwin,progeny,mom_haps)
