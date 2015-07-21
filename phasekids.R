@@ -101,7 +101,7 @@ which_phase<-function(haplotype,kidwin){
     #given the current phased geno and given mom is het. (which is why probs[[2]])
     geno_probs[geno]=sum( sapply(1:length(haplotype), function(zz) log( probs[[2]][three_genotypes[[geno]][zz]+1,kidwin[zz]+1])))
   }
-  if(length(which(geno_probs==max(geno_probs)))!=1){browser()}
+  if(length(which(geno_probs==max(geno_probs)))!=1){recover()}
   return(max(geno_probs))
 }
 ############################################################################
@@ -115,7 +115,6 @@ phase_mom<-function(mom,progeny,win_length){
   mom_phase1=as.numeric() 
   mom_phase2=as.numeric() 
   win_hap=as.numeric()
-  old_hap=as.numeric() 
   for(winstart in 1:(length(hetsites)-(win_length-1))){
     print(winstart)
     momwin=hetsites[winstart:(winstart+win_length-1)]
@@ -133,7 +132,11 @@ phase_mom<-function(mom,progeny,win_length){
         mom_phase1[length(mom_phase1)+1]=win_hap[length(win_hap)]
         mom_phase2[length(mom_phase2)+1]=1-win_hap[length(win_hap)]
       } else{ #PHASE ERROR!
-      browser()
+        warning(paste("Likely recombination at",winstart,sep=" "))
+        bad_phase=ifelse(
+          sum(abs(mom_phase1[winstart:(winstart+(length(win_hap)-2))]-win_hap[1:length(win_hap)-1]))>sum(abs(mom_phase2[winstart:(winstart+(length(win_hap)-2))]-win_hap[1:length(win_hap)-1])),
+          mom_phase2,mom_phase1
+        ) #returns the minimum distance haplotype (prepare to screw up phase!)
       }
     }
   }
@@ -161,7 +164,7 @@ which_phase_kid<-function(haplotype,kidwin){
     geno_probs[geno]=sum( sapply(1:length(haplotype), function(zz) log( probs[[2]][three_genotypes[[geno]][zz]+1,kidwin[zz]+1])))    
   
   }
-  if(length(which(geno_probs==max(geno_probs)))!=1){browser()}
+  if(length(which(geno_probs==max(geno_probs)))!=1){recover()}
   return(three_genotypes[[which(geno_probs==max(geno_probs))]])
 }
 ############################################################################
@@ -186,7 +189,7 @@ infer_dip<-function(momwin,progeny,haps,momphase1){  #momwin is list of heterozy
       same2=sum(momphase1[(length(momphase1)-long+2):length(momphase1)]==(1-tie_hap[1:length(tie_hap)-1]))
       tie_score[i]=max(same1,same2)
     }
-    if(length(which(tie_score==max(tie_score)))!=1){browser()}
+    if(length(which(tie_score==max(tie_score)))!=1){recover()}
     return(haps[[same_phases[which(tie_score==max(tie_score))]]])
   } else {
     return(haps[[which(phase_probs==max(phase_probs))]])
