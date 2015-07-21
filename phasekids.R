@@ -9,8 +9,8 @@ ran.hap=function(numloci,p){sapply(1:numloci,function(x) rbinom(1,1,p[x]))}
 ############################################################################
 
 # Copy mom to kids with recombination
-copy.mom=function(mom,rec){ 
-  co=rpois(1,1.5) #crossovers
+copy.mom=function(mom,co_mean){ 
+  co=rpois(1,co_mean) #crossovers
  # print(co)
   numloci=length(mom[[1]])
   rec=c(1,sort(round(runif(co,2,numloci-1))),numloci+1) #position   
