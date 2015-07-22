@@ -194,7 +194,11 @@ infer_dip<-function(momwin,progeny,haps,momphase1){  #momwin is list of heterozy
       same2=sum(momphase1[(length(momphase1)-long+2):length(momphase1)]==(1-tie_hap[1:length(tie_hap)-1]))
       tie_score[i]=max(same1,same2)
     }
-    if(length(which(tie_score==max(tie_score)))!=1){recover()}
+    if(length(which(tie_score==max(tie_score)))!=1){
+      return(haps[[same_phases[sample(which(tie_score==max(tie_score)),1)]]]) # pick one randomly. 
+      #this occurs in cases e.g. momphase is 010 and haps 0101 and 1011 have same distance from current phase, and both agree on a 1 at the end.  
+      #this will likely screw up phase, but shouldn't mess up genotyp much (I hope)
+    }
     return(haps[[same_phases[which(tie_score==max(tie_score))]]])
   } else {
     return(haps[[which(phase_probs==max(phase_probs))]])

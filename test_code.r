@@ -5,7 +5,7 @@ source("phasekids.R")
 
 ## Params and probabilities
 #### Real Parameters 
-size.array=20 # size of progeny array
+size.array=5 # size of progeny array
 het.error=0.7 # het->hom error
 hom.error=0.002 # hom->other error
 numloci=1000
@@ -54,9 +54,9 @@ for(mysim in 1:sims){
   	progeny<-lapply(1:size.array, function(a) kid(true_mom,true_mom,het.error,hom.error,crossovers,a))
 	#MOM GENO
   	estimated_mom=sapply(1:numloci, function(a) infer_mom(obs_mom,a,progeny,p) ) 
-  	mom.gen.errors[mysim]=(numloci-sum(estimated_mom==true_mom[[1]]+true_mom[[2]]))/numloci
+  	mom.gen.errors[mysim]=(numloci-sum(estimated_mom==true_mom[[1]]+true_mom[[2]]))/numloci # this works great.
 	#MOM PHASE
-  	newmom=phase_mom(estimated_mom,progeny,win_length)
+  	newmom=phase_mom(estimated_mom,progeny,win_length) # this is where all the magic and heartbreak happens.
   	hets=which(true_mom[[1]]+true_mom[[2]]==1)
   	mom.phase.errors[mysim]=min(sum(abs(estimated_mom[hets]-true_mom[[1]][hets])),sum(abs(estimated_mom[hets]-true_mom[[2]][hets])))/length(hets)
 	#KIDS GENOS
