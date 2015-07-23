@@ -28,12 +28,13 @@ p=sample(sfs,numloci) #get freqs for all loci
 
 # row 1 is true_gen 00, row2 is true_gen 01, row 3 is true_gen 11
 # cols are obs. genotype (00,01,11)
+# add in cbind(1) to incorporate missing data coded as genotype 3
 gen_error_mat<-matrix(c(1-hom.error,hom.error/2,hom.error/2,het.error/2,1-het.error,het.error/2,hom.error/2,hom.error/2,1-hom.error),byrow=T,nrow=3,ncol=3)
-
 probs<-vector("list",3)
-probs[[1]]<-gen_error_mat*matrix(c(1, 0, 0), nrow = 3,byrow=F,ncol=3)
-probs[[2]]<-gen_error_mat*matrix(c(1/4, 1/2, 1/4), nrow = 3,byrow=F,ncol=3)
-probs[[3]]<-gen_error_mat*matrix(c(0, 0, 1), nrow = 3,byrow=F,ncol=3)
+probs[[1]]<-cbind(gen_error_mat*matrix(c(1, 0, 0), nrow = 3,byrow=F,ncol=3),1)
+probs[[2]]<-cbind(gen_error_mat*matrix(c(1/4, 1/2, 1/4), nrow = 3,byrow=F,ncol=3),1)
+probs[[3]]<-cbind(gen_error_mat*matrix(c(0, 0, 1), nrow = 3,byrow=F,ncol=3),1)
+gen_error_mat<-cbind(gen_error_mat,1)
 
 ## Do lots of sims
 mom.gen.errors=as.numeric()
