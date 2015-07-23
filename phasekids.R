@@ -107,7 +107,7 @@ which_phase<-function(haplotype,kidwin){
 
 ############################################################################
 # Get mom's phase
-phase_mom<-function(mom,progeny,win_length){
+phase_mom<-function(mom,progeny,win_length,verbose=FALSE){
   hetsites=which(estimated_mom==1)
   mom_haps<-setup_haps(win_length) # gets all possible haplotypes for X hets 
   mom_phase1=as.numeric() 
@@ -115,7 +115,7 @@ phase_mom<-function(mom,progeny,win_length){
   win_hap=as.numeric()
   old_hap=as.numeric() 
   for(winstart in 1:(length(hetsites)-(win_length-1))){
-    #print(paste(winstart,"...")) 
+    if(verbose){ print(paste(winstart,"...")) } 
     momwin=hetsites[winstart:(winstart+win_length-1)]
     if(winstart==1){ #arbitrarily assign win_hap to one chromosome initially
       win_hap=infer_dip(momwin,progeny,mom_haps)
@@ -228,10 +228,11 @@ infer_mom<-function(obs_mom,locus,progeny,p){
 
 ############################################################################
 #check mom's phase and count switches
-check_phase<-function(est_hap,true_hap,old_site,new_site){
-	phase=ifelse(est_hap[new_site]==true_hap[[1]][new_site],1,2)
-	old_phase=ifelse(est_hap[old_site]==true_hap[[1]][old_site],1,2)
-	switch=ifelse(phase==old_phase,0,1)
+check_phase<-function(estimated_hets,est_phase,true_mom,new_site,old_site){
+  
+  phase=ifelse(est_phase[which(estimated_hets==new_site)]==true_mom[[1]][new_site],1,2)
+  old_phase=ifelse(est_phase[which(estimated_hets==old_site)]==true_mom[[1]][old_site],1,2)
+  switch=ifelse(phase==old_phase,0,1)
 	return(switch)
 }
 ############################################################################

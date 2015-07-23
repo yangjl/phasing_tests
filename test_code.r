@@ -11,7 +11,7 @@ source("phasekids.R")
 size.array=5 # size of progeny array
 het.error=0.7 # het->hom error
 hom.error=0.002 # hom->other error
-numloci=4000
+numloci=1000
 win_length=11 # size of window to phase
 sims=1
 errors.correct=FALSE # can assume we know error rates or not
@@ -40,7 +40,6 @@ gen_error_mat<-cbind(gen_error_mat,1)
 mom.gen.errors=as.numeric()
 mom.phase.errors=as.numeric()
 mean.kid.geno.errors=as.numeric()
-sd.kid.geno.errors=as.numeric()
 for(mysim in 1:sims){
   	a1=ran.hap(numloci,p) #make haplotypes
   	a2=ran.hap(numloci,p)
@@ -64,16 +63,15 @@ for(mysim in 1:sims){
   	estimated_mom=sapply(1:numloci, function(a) infer_mom(obs_mom,a,progeny,p) ) 
   	mom.gen.errors[mysim]=(numloci-sum(estimated_mom==true_mom[[1]]+true_mom[[2]]))/numloci
 	#MOM PHASE
-  	newmom=phase_mom(estimated_mom,progeny,win_length)
-  	hets=which(true_mom[[1]]+true_mom[[2]]==1)
+  	newmom=phase_mom(estimated_mom,progeny,win_length,verbose=TRUE)
   	estimated_hets=which(estimated_mom==1)
-	# can't make a phasing error at a site which is not really heterozygous, 
-	# nor is calling a true het site homozygous a phasing error
-	# so we only check phasing error at the intersection of both
-	# note that this could in theory lead to super low phasing error BECAUSE of high
-	# genotype error, but we're gonna ignore that for noe
-	phase_sites=intersect(hets,estimated_hets) 
-  	mom.phase.errors[mysim]=sum(sapply(2:length(phase_sites), function(a) check_phase(newmom,true_mom,phase_sites[a],phase_sites[a-1])))
+	  # can't make a phasing error at a site which is not really heterozygous, 
+	  # nor is calling a true het site homozygous a phasing error
+	  #  so we only check phasing error at the intersection of both
+	  # note that this could in theory lead to super low phasing error BECAUSE of high
+	  # genotype error, but we're gonna ignore that for now
+	  phase_sites=intersect(which(true_mom[[1]]+true_mom[[2]]==1),estimated_hets) 
+    mom.phase.errors[mysim]=sum(sapply(2:length(phase_sites), function(a) check_phase(estimated_hets,newmom,true_mom,phase_sites[a],phase_sites[a-1])))
 
 	#KIDS GENOS
 	inferred_progeny=list()
