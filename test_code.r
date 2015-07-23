@@ -8,10 +8,10 @@ source("phasekids.R")
 
 ## Params and probabilities
 #### Real Parameters 
-size.array=5 # size of progeny array
+size.array=11 # size of progeny array
 het.error=0.7 # het->hom error
 hom.error=0.002 # hom->other error
-numloci=1000
+numloci=40000
 win_length=11 # size of window to phase
 sims=1
 errors.correct=FALSE # can assume we know error rates or not
