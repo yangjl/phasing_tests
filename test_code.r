@@ -66,10 +66,17 @@ for(mysim in 1:sims){
 	#MOM PHASE
   	newmom=phase_mom(estimated_mom,progeny,win_length)
   	hets=which(true_mom[[1]]+true_mom[[2]]==1)
-  	mom.phase.errors[mysim]=min(sum(abs(estimated_mom[hets]-true_mom[[1]][hets])),sum(abs(estimated_mom[hets]-true_mom[[2]][hets])))/length(hets)
+  	estimated_hets=which(estimated_mom==1)
+	# can't make a phasing error at a site which is not really heterozygous, 
+	# nor is calling a true het site homozygous a phasing error
+	# so we only check phasing error at the intersection of both
+	# note that this could in theory lead to super low phasing error BECAUSE of high
+	# genotype error, but we're gonna ignore that for noe
+	phase_sites=intersect(hets,estimated_hets) 
+  	mom.phase.errors[mysim]=sum(sapply(2:length(phase_sites), function(a) check_phase(newmom,true_mom,phase_sites[a],phase_sites[a-1])))
+
 	#KIDS GENOS
 	inferred_progeny=list()
-  	estimated_hets=which(estimated_mom==1)
 	mean.kid.geno.errors[mysim]=0;
 	for(z in 1:length(progeny)){
 		inferred_progeny[[z]]=which_phase_kid(newmom,progeny[[z]][[2]][estimated_hets] )

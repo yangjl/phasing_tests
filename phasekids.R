@@ -226,7 +226,15 @@ infer_mom<-function(obs_mom,locus,progeny,p){
 ############################################################################
 
 
-
+############################################################################
+#check mom's phase and count switches
+check_phase<-function(est_hap,true_hap,old_site,new_site){
+	phase=ifelse(est_hap[new_site]==true_hap[[1]][new_site],1,2)
+	old_phase=ifelse(est_hap[old_site]==true_hap[[1]][old_site],1,2)
+	switch=ifelse(phase==old_phase,0,1)
+	return(switch)
+}
+############################################################################
 
 
 
