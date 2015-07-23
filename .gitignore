@@ -3,3 +3,5 @@ error/*
 .Rproj.user
 phasing_tests.Rproj
 *.html
+.Rhistory
+.RData

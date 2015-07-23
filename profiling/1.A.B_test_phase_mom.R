@@ -1,7 +1,27 @@
+### Jinliang Yang
+### July 23, 2015
+
+### loading all the functions in folder "lib"
+sourceall <-function(rm=FALSE){
+    if(rm) rm(list=ls())
+    f <- sapply(list.files(pattern="[.]R$", path="lib", full.names=TRUE), source)
+}
+sourceall(rm=F)
+
+### simulation perfect mom and noisy kids
+set.seed(123456)
+sim <- SimSelfer(size.array=10, het.error=0.7, hom.error=0.002, numloci=100, rec=1.2, imiss=0.3)
+plotselfer(sim, kids=6:10, snps=40:100, cols=c("green", "blue"))
 
 
+### format to phase_mom
+input <- sim2input(sim)
+probs <- get_error_mat(0.002, 0.7)[[2]]
+estimated_mom <- input[[1]]
+progeny <- input[[2]]
 #MOM PHASE
-newmom=phase_mom(estimated_mom,progeny,win_length,verbose=TRUE)
+newmom <- phase_mom(estimated_mom, progeny, 10, verbose=TRUE)
+
 estimated_hets=which(estimated_mom==1)
 # can't make a phasing error at a site which is not really heterozygous, 
 # nor is calling a true het site homozygous a phasing error

@@ -11,7 +11,7 @@ source("phasekids.R")
 size.array=11 # size of progeny array
 het.error=0.7 # het->hom error
 hom.error=0.002 # hom->other error
-numloci=40000
+numloci=100
 win_length=11 # size of window to phase
 sims=1
 errors.correct=FALSE # can assume we know error rates or not
