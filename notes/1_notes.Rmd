@@ -1,0 +1,38 @@
+---
+title: "Notes"
+author: "Jinliang Yang"
+date: "July 23, 2015"
+output: html_document
+---
+
+# Infer mom's genotype by JRI
+
+We have obs. mom and obs. (selfed) kids.  We want to know $P(G|\theta)$, and $P(G|\theta) \propto P(\theta|G) \times (G)$, 
+where $\theta$ is observed data.  This consists of observed genotypes ($G'$) of both mom and kids. So:
+$P(G|\theta)\propto \left( \prod\limits_{i=1}^{k}{P(G'_k|G)} \right) \times P(G'_{mom}|G) \times P(G)$
+This function is to impute mom's genotype from a progeny array of k kids at a single locus.
+inferred_mom=1 -> 00, 2->01, 3->11
+
+
+----------
+
+# Current issues
+1. ~~errors should not be used for inferring~~   
+2. ~~p unknown, could only be estimated from data.~~
+
+3. haplotype needs to consider imputation error.?
+4. lost info (i.e. sites heter but inferred homo)?
+5. missing data?
+6. mom + dad
+7. File IO
+
+# To Do List:
+1. ~~impute Mom~~
+2. phase Mom
+3. phase Kids
+4. impute Kids
+
+
+
+
+

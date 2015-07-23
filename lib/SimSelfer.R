@@ -15,18 +15,13 @@ SimSelfer <- function(size.array=20, het.error=0.7, hom.error=0.002, numloci=100
     a2=ran.hap(numloci,p)
     
     true_mom=list(a1,a2) #phased 
-    obs_mom=add_error(a1+a2,hom.error,het.error) #convert to diploid genotype
+    #obs_mom=add_error(a1+a2,hom.error,het.error) #convert to diploid genotype
+    #if(imiss > 0){
+    #    idxmom <- missing.idx(numloci, imiss)
+    #    obs_mom <- replace(obs_mom, idxmom, misscode)
+    #}
+    simp <- data.frame(hap1=a1, hap2=a2, geno=a1+a2, obs=a1+a2)
     
-    if(imiss > 0){
-        idxmom <- missing.idx(numloci, imiss)
-        obs_mom <- replace(obs_mom, idxmom, misscode)
-    }
-    simp <- data.frame(hap1=a1, hap2=a2, geno=a1+a2, obs=obs_mom)
-    ## tot 142/1000
-    ## nrow(subset(simp, (hap1 != hap2)  & (hap1 + hap2 != geno)))/nrow(subset(simp, hap1 != hap2))
-    # 0.70
-    ## nrow(subset(simp, (hap1 == hap2)  & (hap1 + hap2 != geno)))/nrow(subset(simp, hap1 == hap2))
-    # 0.00125
     
     # make selfed progeny array
     progeny <- vector("list",size.array)
