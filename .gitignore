@@ -1,3 +1,2 @@
-error/phase_error*
-out/phase_out*
-out/out*4*
+out/*
+error/*
