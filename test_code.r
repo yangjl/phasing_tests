@@ -11,8 +11,8 @@ source("phasekids.R")
 size.array=5 # size of progeny array
 het.error=0.7 # het->hom error
 hom.error=0.002 # hom->other error
-numloci=1000
-win_length=12 # size of window to phase
+numloci=4000
+win_length=11 # size of window to phase
 sims=1
 errors.correct=FALSE # can assume we know error rates or not
 freqs.correct=FALSE # can assume we know freqs or not
@@ -28,7 +28,7 @@ p=sample(sfs,numloci) #get freqs for all loci
 
 # row 1 is true_gen 00, row2 is true_gen 01, row 3 is true_gen 11
 # cols are obs. genotype (00,01,11)
-# add in cbind(1) to incorporate missing data coded as genotype 3
+# JY modification to add in cbind(1) to incorporate missing data coded as genotype 3
 gen_error_mat<-matrix(c(1-hom.error,hom.error/2,hom.error/2,het.error/2,1-het.error,het.error/2,hom.error/2,hom.error/2,1-hom.error),byrow=T,nrow=3,ncol=3)
 probs<-vector("list",3)
 probs[[1]]<-cbind(gen_error_mat*matrix(c(1, 0, 0), nrow = 3,byrow=F,ncol=3),1)
@@ -42,21 +42,23 @@ mom.phase.errors=as.numeric()
 mean.kid.geno.errors=as.numeric()
 sd.kid.geno.errors=as.numeric()
 for(mysim in 1:sims){
-	if(errors.correct==FALSE){
-  		het.error=runif(1)/1.67+0.4 # random 0.4-1
-  		hom.error=10^-(runif(1)*4+1) # random
-	}
-	if(freqs.correct==FALSE){
-    		og.p=p
-    		p=sapply(1:numloci, function(a) sum(rbinom(140,1,p[a]))/140) 
-    		p[which(p==0)]=1/70;
-	}
   	a1=ran.hap(numloci,p) #make haplotypes
   	a2=ran.hap(numloci,p)
   	true_mom=list(a1,a2) #phased 
   	obs_mom=add_error(a1+a2,hom.error,het.error) #convert to diploid genotype
   	progeny<-vector("list",size.array)
   	progeny<-lapply(1:size.array, function(a) kid(true_mom,true_mom,het.error,hom.error,crossovers))
+	
+	#CHANGE error matrix and re-estimate allele frequencies
+	if(errors.correct==FALSE){
+  		het.error=rnorm(1,0.7,0.05) # random normal,roughly 0.55-0.85
+  		hom.error=10^-(runif(1)*4+1) # random bad guess
+	}
+	if(freqs.correct==FALSE){
+		#should replicate real sampling. Draw 70 diploids, add genotyping error, estimate freq.
+    		p=sapply(1:numloci, function(a) sum(add_error(rbinom(70,2,p[a]),0.002,0.7))/140) 
+    		p[which(p==0)]=1/140;
+	}
   
 	#MOM GENO
   	estimated_mom=sapply(1:numloci, function(a) infer_mom(obs_mom,a,progeny,p) ) 
