@@ -53,7 +53,7 @@ if(errors.correct==FALSE){
 }
   
 #MOM GENO
-estimated_mom=true_mom[[1]]+true_mom[[2] #assumes mom was imputed with perfection or known from e.g. WGS data
+estimated_mom=true_mom[[1]]+true_mom[[2]] #assumes mom was imputed with perfection or known from e.g. WGS data
 #MOM PHASE
 newmom=phase_mom(estimated_mom,progeny,win_length,verbose=TRUE)
 estimated_hets=which(estimated_mom==1)
@@ -63,15 +63,14 @@ estimated_hets=which(estimated_mom==1)
 # note that this could in theory lead to super low phasing error BECAUSE of high
 # genotype error, but we're gonna ignore that for now
 phase_sites=intersect(which(true_mom[[1]]+true_mom[[2]]==1),estimated_hets) 
-mom.phase.errors[mysim]=sum(sapply(2:length(phase_sites), function(a) check_phase(estimated_hets,newmom,true_mom,phase_sites[a],phase_sites[a-1])))
+mom.phase.errors=sum(sapply(2:length(phase_sites), function(a) check_phase(estimated_hets,newmom,true_mom,phase_sites[a],phase_sites[a-1])))
 
 #KIDS GENOS
 inferred_progeny=list()
-mean.kid.geno.errors[mysim]=0;
 for(z in 1:length(progeny)){
 	inferred_progeny[[z]]=which_phase_kid(newmom,progeny[[z]][[2]][estimated_hets] )
-	mean.kid.geno.errors[mysim]=mean.kid.geno.errors[mysim]+(sum(abs(progeny[[z]][[1]][estimated_hets]-inferred_progeny[[z]])))/length(progeny)
+	mean.kid.geno.errors=mean.kid.geno.errors+(sum(abs(progeny[[z]][[1]][estimated_hets]-inferred_progeny[[z]])))/length(progeny)
 }
-mean.kid.geno.errors[mysim]=mean.kid.geno.errors[mysim]/numloci
-results=c(mean(mom.phase.errors),mean(mean.kid.geno.errors))
+mean.kid.geno.errors=mean.kid.geno.errors/numloci
+results=c(mom.phase.errors,mean.kid.geno.errors)
 write.table(file=paste("./out/out.",crossovers,".",job,".txt",sep=""),t(results),quote=F,col.names=FALSE,row.names=FALSE)
