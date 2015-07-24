@@ -63,25 +63,18 @@ hw_probs<-function(x){ return(c(x^2,2*x*(1-x),(1-x)^2))}
 ############################################################################
 # Setup all possible haplotypes for window of X heterozgous sites
 #This needs to be fixed to remove redundancy. E.g. 010 is the same as 101 and 1010 is same as 0101. I don't think should bias things in the meantime, just be slow.
-setup_haps<-function(win_length){
-  haps=list(0,1); 
-  for(i in 2:win_length){ 
-    haps=c(haps,haps); 
-    for(j in 1:(length(haps)/2)){  haps[[j]][(length(haps[[j]]))+1]=0 };   
-    for(k in (length(haps)/2+1):length(haps)){  haps[[k]][(length(haps[[k]]))+1]=1 };   
-  }
-  nohaps=as.numeric();
-  newhaps=list();
-  for(i in 1:(length(haps)-1)){
-    for(j in (i+1):length(haps)){
-      if(sum((1-unlist(haps[j]))==unlist(haps[i]))==win_length){ nohaps[length(nohaps)+1]=i }
-    }
-  }
-  for(i in 1:length(haps)){ if(!(i %in% nohaps)){newhaps[[length(newhaps)+1]]=haps[[i]]}}
-  return(newhaps)
+setup_haps <- function(win_length){
+    if(win_length <= 20){
+        alist <- lapply(1:win_length, function(a) c(0,1) )
+        ### give a combination of all 0,1 into a data.frame
+        hapdf <- expand.grid(alist)[1:2^(win_length-1),]
+        ### split the data.frame into a list
+        return(as.list(as.data.frame(t(hapdf)))) 
+    }else{
+        stop("!!! Can not handle [win_length > 20] !")
+    }   
 }
 ############################################################################
-
 
 ############################################################################
 # Find most likely phase of kid at a window, return that probability
@@ -180,23 +173,27 @@ infer_dip<-function(momwin,progeny,haps,momphase1){  #momwin is list of heterozy
     #get max. prob for each kid, sum over kids
     phase_probs[my_hap]=sum( sapply(1:length(progeny), function(z) which_phase(haps[my_hap],progeny[[z]][[2]][momwin] )))
   }
- #if multiple haps tie, check each against current phase and return one with smallest distance
- if(length(which(phase_probs==max(phase_probs)))>1){
-    same_phases=which(phase_probs==max(phase_probs))
-    tie_score=as.numeric()
-    long=length(momwin)
-    for( i in 1:length(same_phases)){    
-      tie_hap=haps[[same_phases[i]]]
-      same1=sum(momphase1[(length(momphase1)-long+2):length(momphase1)]==tie_hap[1:length(tie_hap)-1])
-      same2=sum(momphase1[(length(momphase1)-long+2):length(momphase1)]==(1-tie_hap[1:length(tie_hap)-1]))
-      tie_score[i]=max(same1,same2)
+  #if multiple haps tie, check each against current phase and return one with smallest distance
+  if(length(which(phase_probs==max(phase_probs)))>1){
+    if(missing(momphase1)){
+      return(phaseprobs[sample(which(phase_probs==max(phase_probs)))])
+    } else{
+      same_phases=which(phase_probs==max(phase_probs))
+      tie_score=as.numeric()
+      long=length(momwin)
+      for( i in 1:length(same_phases)){    
+        tie_hap=haps[[same_phases[i]]]
+        same1=sum(momphase1[(length(momphase1)-long+2):length(momphase1)]==tie_hap[1:length(tie_hap)-1])
+        same2=sum(momphase1[(length(momphase1)-long+2):length(momphase1)]==(1-tie_hap[1:length(tie_hap)-1]))
+        tie_score[i]=max(same1,same2)
+      }
+      if(length(which(tie_score==max(tie_score)))!=1){
+        return(haps[[same_phases[sample(which(tie_score==max(tie_score)),1)]]]) # pick one randomly.
+        #this occurs in cases e.g. momphase is 010 and haps 0101 and 1011 have same distance from current phase, and both agree on a 1 at the end.
+        #this will likely screw up phase, but shouldn't mess up genotyp much (I hope)
+      }
+      return(haps[[same_phases[which(tie_score==max(tie_score))]]])
     }
-    if(length(which(tie_score==max(tie_score)))!=1){
-      return(haps[[same_phases[sample(which(tie_score==max(tie_score)),1)]]]) # pick one randomly.
-      #this occurs in cases e.g. momphase is 010 and haps 0101 and 1011 have same distance from current phase, and both agree on a 1 at the end.
-      #this will likely screw up phase, but shouldn't mess up genotyp much (I hope)
-    }
-    return(haps[[same_phases[which(tie_score==max(tie_score))]]])
   } else {
     return(haps[[which(phase_probs==max(phase_probs))]])
   }
