@@ -153,7 +153,38 @@ which_phase <- function(haplotype,kidwin){
     return(max(geno_probs))
 }
 ############################################################################
-
+which_phase2 <- function(haplotype,kidwin, rr){
+    three_genotypes=list()
+    haplotype <- unlist(haplotype)
+    haplotyper <- c(haplotype[-length(haplotype)], 1-haplotype[length(haplotype)])
+    
+    haps <- list(haplotype, 1-haplotype, haplotyper, 1-haplotyper)
+    genos <- list(list())
+    for(i in 1:4){
+        genos[[i]][[j]] <- 0
+        for(j in 1:4){
+            genos[[i]][[j]] <- haps[[i]] + haps[[j]]
+        }
+    }
+    
+    #????
+    # %*% c(1,1,1,1) + t(c(haplotype, 1-haplotype, haplotyper, 1-haplotyper)) %*% c(1,1,1,1)
+    #probMx <- c(1-rr, 1-rr, rr, rr) %*% t(c(1-rr, 1-rr, rr, rr)))
+                    
+    three_genotypes[[1]]=haplotype+haplotype
+    three_genotypes[[2]]=haplotype+(1-haplotype)
+    three_genotypes[[3]]=(1-haplotype)+(1-haplotype)
+    geno_probs=as.numeric() #prob of each of three genotypes
+    for(geno in 1:3){
+        #log(probs[[2]][three_genotypes,kidwin] is the log prob. of kid's obs geno 
+        #given the current phased geno and given mom is het. (which is why probs[[2]])
+        geno_probs[geno]=sum( sapply(1:length(haplotype), function(zz) 
+            log( probs[[2]][three_genotypes[[geno]][zz]+1,kidwin[zz]+1])))
+    }
+    ### may introduce error
+    if(length(which(geno_probs==max(geno_probs)))!=1){recover()}
+    return(max(geno_probs))
+}
 
 
 
