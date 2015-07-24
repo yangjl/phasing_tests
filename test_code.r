@@ -11,9 +11,8 @@ source("phasekids.R")
 size.array=10 # size of progeny array
 het.error=0.7 # het->hom error
 hom.error=0.002 # hom->other error
-numloci=4000
+numloci=100
 win_length=11 # size of window to phase
-sims=1
 errors.correct=FALSE # can assume we know error rates or not
 #freqs.correct=FALSE # can assume we know freqs or not
 crossovers=as.numeric(args[1]) # mean expected crossovers per chromosome; 0 = no recombination
@@ -67,6 +66,7 @@ mom.phase.errors=sum(sapply(2:length(phase_sites), function(a) check_phase(estim
 
 #KIDS GENOS
 inferred_progeny=list()
+mean.kid.geno.errors=0
 for(z in 1:length(progeny)){
 	inferred_progeny[[z]]=which_phase_kid(newmom,progeny[[z]][[2]][estimated_hets] )
 	mean.kid.geno.errors=mean.kid.geno.errors+(sum(abs(progeny[[z]][[1]][estimated_hets]-inferred_progeny[[z]])))/length(progeny)
