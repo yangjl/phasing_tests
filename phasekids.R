@@ -63,22 +63,16 @@ hw_probs<-function(x){ return(c(x^2,2*x*(1-x),(1-x)^2))}
 ############################################################################
 # Setup all possible haplotypes for window of X heterozgous sites
 #This needs to be fixed to remove redundancy. E.g. 010 is the same as 101 and 1010 is same as 0101. I don't think should bias things in the meantime, just be slow.
-setup_haps<-function(win_length){
-  haps=list(0,1); 
-  for(i in 2:win_length){ 
-    haps=c(haps,haps); 
-    for(j in 1:(length(haps)/2)){  haps[[j]][(length(haps[[j]]))+1]=0 };   
-    for(k in (length(haps)/2+1):length(haps)){  haps[[k]][(length(haps[[k]]))+1]=1 };   
-  }
-  nohaps=as.numeric();
-  newhaps=list();
-  for(i in 1:(length(haps)-1)){
-    for(j in (i+1):length(haps)){
-      if(sum((1-unlist(haps[j]))==unlist(haps[i]))==win_length){ nohaps[length(nohaps)+1]=i }
-    }
-  }
-  for(i in 1:length(haps)){ if(!(i %in% nohaps)){newhaps[[length(newhaps)+1]]=haps[[i]]}}
-  return(newhaps)
+setup_haps <- function(win_length){
+    if(win_length <= 20){
+        alist <- lapply(1:win_length, function(a) c(0,1) )
+        ### give a combination of all 0,1 into a data.frame
+        hapdf <- expand.grid(alist)[1:2^(win_length-1),]
+        ### split the data.frame into a list
+        return(as.list(as.data.frame(t(hapdf)))) 
+    }else{
+        stop("!!! Can not handle [win_length > 20] !")
+    }   
 }
 ############################################################################
 
