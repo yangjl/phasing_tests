@@ -14,7 +14,7 @@ phase_mom <- function(estimated_mom, progeny, win_length, verbose=FALSE){
         momwin <- hetsites[winstart:(winstart+win_length-1)]
         if(winstart==1){ 
             #arbitrarily assign win_hap to one chromosome initially
-            win_hap=infer_dip(momwin,progeny,mom_haps)
+            win_hap=infer_dip(momwin,progeny,mom_haps, mom_haps[3])
             mom_phase1=win_hap
             mom_phase2=1-win_hap
         } else{
@@ -42,8 +42,9 @@ phase_mom <- function(estimated_mom, progeny, win_length, verbose=FALSE){
             }
         }
     }
-    myphase <- replace(estimated_mom/2, hetsites, mom_phase1)
-    return(mom_phase1)
+    myh1 <- replace(estimated_mom/2, hetsites, mom_phase1)
+    myh2 <- replace(estimated_mom/2, hetsites, 1-mom_phase1)
+    return(data.frame(h1=myh1, h2=myh2))
 }
 ############################################################################
 
@@ -101,7 +102,7 @@ infer_dip <- function(momwin,progeny,haps,momphase1){
     runoverhaps <- function(myhap){
         #iterate over possible haplotypes <- this is slower because setup_haps makes too many haps
         #get max. prob for each kid, sum over kids
-        return(sum( sapply(1:length(progeny), function(z) which_phase(haps[my_hap],progeny[[z]][[2]][momwin] ))))
+        return(sum( sapply(1:length(progeny), function(z) which_phase(haps[myhap],progeny[[z]][[2]][momwin] ))))
     }
     phase_probs <- sapply(1:(length(haps)), function(a) runoverhaps(a) )
     ### system.time()

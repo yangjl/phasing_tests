@@ -22,6 +22,17 @@ progeny <- input[[2]]
 #MOM PHASE
 newmom <- phase_mom(estimated_mom, progeny, 10, verbose=TRUE)
 
+
+plotphasing(sim, kids=1:10, snps=1:100, cols=c("red", "blue"), plotphasing=TRUE, newmom)
+
+
+
+
+
+
+
+
+
 estimated_hets=which(estimated_mom==1)
 # can't make a phasing error at a site which is not really heterozygous, 
 # nor is calling a true het site homozygous a phasing error
