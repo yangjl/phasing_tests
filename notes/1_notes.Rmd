@@ -19,16 +19,15 @@ inferred_mom=1 -> 00, 2->01, 3->11
 # Current issues
 1. ~~errors should not be used for inferring~~   
 2. ~~p unknown, could only be estimated from data.~~
+3. ~~missing data?~~
+4. ~~File IO~~
 
-3. haplotype needs to consider imputation error.?
-4. lost info (i.e. sites heter but inferred homo)?
-5. missing data?
+5. switching error.?
 6. mom + dad
-7. File IO
 
 # To Do List:
 1. ~~impute Mom~~
-2. phase Mom
+2. ~~phase Mom~~
 3. phase Kids
 4. impute Kids
 
