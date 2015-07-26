@@ -6,11 +6,11 @@ sourceall <-function(rm=FALSE){
     if(rm) rm(list=ls())
     f <- sapply(list.files(pattern="[.]R$", path="lib", full.names=TRUE), source)
 }
-sourceall(rm=F)
+sourceall(rm=T)
 
 ### simulation perfect mom and noisy kids
 set.seed(1235789)
-sim <- SimSelfer(size.array=10, het.error=0.7, hom.error=0.002, numloci=1000, rec=1.2, imiss=0.3)
+sim <- SimSelfer(size.array=10, het.error=0.7, hom.error=0.002, numloci=500, rec=1.2, imiss=0.3)
 #plotselfer(sim, kids=6:10, snps=40:100, cols=c("green", "blue"))
 
 
@@ -20,7 +20,7 @@ probs <- get_error_mat(0.002, 0.7)[[2]]
 estimated_mom <- input[[1]]
 progeny <- input[[2]]
 #MOM PHASE
-newmom <- phase_mom(estimated_mom, progeny, 10, verbose=TRUE)
+newmom <- phase_mom(estimated_mom, progeny, win_length=10, verbose=TRUE)
 plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
 
 

@@ -177,7 +177,7 @@ infer_dip<-function(momwin,progeny,haps,momphase1){  #momwin is list of heterozy
   #if multiple haps tie, check each against current phase and return one with smallest distance
   if(length(which(phase_probs==max(phase_probs)))>1){
     if(missing(momphase1)){
-      return(phaseprobs[sample(which(phase_probs==max(phase_probs)))])
+      return(phase_probs[sample(which(phase_probs==max(phase_probs)))])
     } else{
       same_phases=which(phase_probs==max(phase_probs))
       tie_score=as.numeric()

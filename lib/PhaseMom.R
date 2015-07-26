@@ -4,49 +4,103 @@
 phase_mom <- function(estimated_mom, progeny, win_length, verbose=FALSE){
     hetsites <- which(estimated_mom==1)
     # gets all possible haplotypes for X hets 
-    mom_haps <- setup_haps2(win_length) 
-    mom_phase1=as.numeric() 
-    mom_phase2=as.numeric() 
-    win_hap=as.numeric()
-    old_hap=as.numeric() 
-    for(winstart in 1:(length(hetsites)-(win_length-1))){
+    mom_haps <- setup_haps(win_length) 
+    mom_phase1 = mom_phase2 = as.numeric() 
+    win_hap = old_hap = nophase = as.numeric() 
+    haplist <- list()
+    #for(winstart in 1:(length(hetsites)-(win_length-1)))
+    winstart <- i <- 1
+    while(winstart <= length(hetsites)-(win_length-1)){
         if(verbose){ message(sprintf(">>> phasing window [ %s ] ...", winstart)) } 
         momwin <- hetsites[winstart:(winstart+win_length-1)]
         if(winstart==1){ 
             #arbitrarily assign win_hap to one chromosome initially
-            win_hap=infer_dip(momwin,progeny,mom_haps, mom_haps[3])
+            win_hap <- infer_dip(momwin,progeny,haps=mom_haps, returnhap=TRUE)
             mom_phase1=win_hap
             mom_phase2=1-win_hap
         } else{
-            win_hap=infer_dip(momwin,progeny,mom_haps,mom_phase1)
-            ### comparing current hap with old hap?
-            same=sum(mom_phase1[winstart:(winstart+(length(win_hap)-2))]==win_hap[1:length(win_hap)-1])
-            if(same==0){ #totally opposite phase of last window
-                mom_phase2[length(mom_phase2)+1] <- win_hap[length(win_hap)]
-                mom_phase1[length(mom_phase1)+1] <- 1-win_hap[length(win_hap)]
-            } else if(same==(win_length-1) ){ #same phase as last window
-                mom_phase1[length(mom_phase1)+1] <- win_hap[length(win_hap)]
-                mom_phase2[length(mom_phase2)+1] <- 1-win_hap[length(win_hap)]
-            } else{ ##returns the minimum distance haplotype (prepare to screw up phase!)
-                ### need to keep the current hap and recalculate over certain windows ? -JLY###
-                warning(paste("Likely recombination at", winstart, sep=" "))
-                diff1 <- sum(abs(mom_phase1[winstart:(winstart+(length(win_hap)-2))]-win_hap[1:length(win_hap)-1]))
-                diff2 <- sum(abs(mom_phase2[winstart:(winstart+(length(win_hap)-2))]-win_hap[1:length(win_hap)-1]))
-                if(diff1>diff2){ #momphase1 is less similar to current inferred hap
-                    mom_phase2[length(mom_phase2)+1]=win_hap[length(win_hap)]
-                    mom_phase1[length(mom_phase1)+1]=1-win_hap[length(win_hap)]
-                } else{ #momphase1 is more similar
-                    mom_phase1[length(mom_phase1)+1]=win_hap[length(win_hap)]
-                    mom_phase2[length(mom_phase2)+1]=1-win_hap[length(win_hap)]
+            win_hap <- infer_dip(momwin, progeny, haps=mom_haps, returnhap=FALSE)
+            ### comparing current hap with old hap except the last bp -JLY
+            if(!is.null(win_hap)){
+                
+                same=sum(mom_phase1[(length(mom_phase1)-8):length(mom_phase1)]==win_hap[1:length(win_hap)-1])
+                
+                if(same == 0){ #totally opposite phase of last window
+                    mom_phase2[length(mom_phase2)+1] <- win_hap[length(win_hap)]
+                    mom_phase1[length(mom_phase1)+1] <- 1-win_hap[length(win_hap)]
+                } else if(same==(win_length-1) ){ #same phase as last window
+                    mom_phase1[length(mom_phase1)+1] <- win_hap[length(win_hap)]
+                    mom_phase2[length(mom_phase2)+1] <- 1-win_hap[length(win_hap)]
+                } else{
+                    stop(">>> Extending error !!!")
                 }
+            } else {
+                ### potential recombination in kids, output previous haps and jump to next non-overlap window -JLY###
+                haplist[[i]] <- list(mom_phase1, mom_phase2)
+                i <- i +1
+                
+                winstart <- winstart + win_length -2
+                warning(paste("Likely recombination at position", winstart+1, sep=" "))
+                
+                ### if new window is still ambiguous, add 1bp and keep running until find the best hap
+                while(is.null(win_hap)){
+                    
+                    winstart <- winstart + 1
+                    win_hap <- jump_win(winstart, win_length, hetsites)
+                    if(is.null(win_hap)){
+                        nophase <- c(nophase, hetsites[winstart])
+                    }
+                }
+                
+                mom_phase1 <- win_hap
+                mom_phase2 <- 1-win_hap
             }
         }
+        winstart <- winstart + 1
     }
-    myh1 <- replace(estimated_mom/2, hetsites, mom_phase1)
-    myh2 <- replace(estimated_mom/2, hetsites, 1-mom_phase1)
-    return(data.frame(h1=myh1, h2=myh2))
+    
+    ### return the two haplotypes
+    #myh1 <- replace(estimated_mom/2, hetsites, mom_phase1)
+    #myh2 <- replace(estimated_mom/2, hetsites, 1-mom_phase1)
+    #return(data.frame(h1=myh1, h2=myh2))
+    haplist[[i]] <- list(mom_phase1, mom_phase2)
+    return(list(info=list(het=hetsites, nophase=nophase), haplist=haplist))
 }
 ############################################################################
+link_haps <- function(momwin, progeny, haps, returnhap=FALSE){  
+    # momwin is list of heterozygous sites, progeny list of kids genotypes, 
+    # haps list of possible haps,momphase1 is current phased mom for use in splitting ties
+    #### function for running one hap ####
+    runoverhaps <- function(myhap){
+        #iterate over possible haplotypes <- this is slower because setup_haps makes too many haps
+        #get max. prob for each kid, sum over kids
+        return(sum( sapply(1:length(progeny), function(z) 
+            which_phase(haps[myhap],progeny[[z]][[2]][momwin] ))))
+    }
+    phase_probs <- sapply(1:(length(haps)), function(a) runoverhaps(a) )
+    #if multiple haps tie, return two un-phased haps
+    if(length(which(phase_probs==max(phase_probs)))>1){
+        return()
+    } else {
+        return(haps[[which(phase_probs==max(phase_probs))]])
+    }
+}
+
+
+############################################################################
+jump_win <- function(winstart, win_length, hetsites){
+    ### jump to next window
+    if(length(hetsites) > (winstart + win_length - 1)){
+        momwin <- hetsites[winstart:(winstart + win_length - 1)]
+        win_hap <- infer_dip(momwin, progeny, haps=mom_haps, returnhap=FALSE)
+    }else{
+        momwin <- hetsites[winstart:length(hetsites)]
+        mom_haps_tem <- setup_haps(win_length=length(winstart:length(hetsites)))
+        win_hap <- infer_dip(momwin, progeny, haps=mom_haps_tem, returnhap=TRUE)
+        
+    }
+    return(win_hap)
+}
 
 
 ############################################################################
@@ -54,25 +108,6 @@ phase_mom <- function(estimated_mom, progeny, win_length, verbose=FALSE){
 # This needs to be fixed to remove redundancy. E.g. 010 is the same as 101 and 1010 is same as 0101. 
 # I don't think should bias things in the meantime, just be slow.
 setup_haps <- function(win_length){
-    haps=list(0,1); 
-    for(i in 2:win_length){ 
-        haps=c(haps,haps); 
-        for(j in 1:(length(haps)/2)){  haps[[j]][(length(haps[[j]]))+1]=0 };   
-        for(k in (length(haps)/2+1):length(haps)){  haps[[k]][(length(haps[[k]]))+1]=1 };   
-    }
-    nohaps=as.numeric();
-    newhaps=list();
-    for(i in 1:(length(haps)-1)){
-        for(j in (i+1):length(haps)){
-            if(sum((1-unlist(haps[j]))==unlist(haps[i]))==win_length){ nohaps[length(nohaps)+1]=i }
-        }
-    }
-    for(i in 1:length(haps)){ if(!(i %in% nohaps)){newhaps[[length(newhaps)+1]]=haps[[i]]}}
-    return(newhaps)
-}
-############################################################################
-#system.time(tem <- setup_haps(10))
-setup_haps2 <- function(win_length){
     if(win_length <= 20){
         alist <- lapply(1:win_length, function(a) c(0,1) )
         ### give a combination of all 0,1 into a data.frame
@@ -86,45 +121,27 @@ setup_haps2 <- function(win_length){
 #system.time(tem2 <- setup_haps2(10))
 #system.time(tem <- setup_haps(10))
 
+
 ############################################################################
 # Infer which phase is mom in a window
-infer_dip <- function(momwin,progeny,haps,momphase1){  
-    #momwin is list of heterozygous sites, progeny list of kids genotypes, 
-    #haps list of possible haps,momphase1 is current phased mom for use in splitting ties
-    #phase_probs=as.numeric()
-    #for(my_hap in 1:(length(haps))){ 
-        #iterate over possible haplotypes <- this is slower because setup_haps makes too many haps
-        #get max. prob for each kid, sum over kids
-    #    phase_probs[my_hap]=sum( sapply(1:length(progeny), function(z) which_phase(haps[my_hap],progeny[[z]][[2]][momwin] )))
-    #}
-    
+infer_dip <- function(momwin, progeny, haps, returnhap=FALSE){  
+    # momwin is list of heterozygous sites, progeny list of kids genotypes, 
+    # haps list of possible haps,momphase1 is current phased mom for use in splitting ties
     #### function for running one hap ####
     runoverhaps <- function(myhap){
         #iterate over possible haplotypes <- this is slower because setup_haps makes too many haps
         #get max. prob for each kid, sum over kids
-        return(sum( sapply(1:length(progeny), function(z) which_phase(haps[myhap],progeny[[z]][[2]][momwin] ))))
+        return(sum( sapply(1:length(progeny), function(z) 
+            which_phase(haps[myhap],progeny[[z]][[2]][momwin] ))))
     }
     phase_probs <- sapply(1:(length(haps)), function(a) runoverhaps(a) )
-    ### system.time()
-    
     #if multiple haps tie, check each against current phase and return one with smallest distance
     if(length(which(phase_probs==max(phase_probs)))>1){
-        same_phases=which(phase_probs==max(phase_probs))
-        tie_score=as.numeric()
-        long=length(momwin)
-        for( i in 1:length(same_phases)){    
-            tie_hap=haps[[same_phases[i]]]
-            same1=sum(momphase1[(length(momphase1)-long+2):length(momphase1)]==tie_hap[1:length(tie_hap)-1])
-            same2=sum(momphase1[(length(momphase1)-long+2):length(momphase1)]==(1-tie_hap[1:length(tie_hap)-1]))
-            tie_score[i]=max(same1,same2)
+        if(returnhap){
+            return(haps[[sample(which(phase_probs==max(phase_probs)), 1)]])
+        } else{
+            return(NULL)
         }
-        if(length(which(tie_score==max(tie_score)))!=1){
-            return(haps[[same_phases[sample(which(tie_score==max(tie_score)),1)]]]) # pick one randomly.
-            #this occurs in cases e.g. momphase is 010 and haps 0101 and 1011 have same distance from current phase, 
-            #and both agree on a 1 at the end.
-            #this will likely screw up phase, but shouldn't mess up genotyp much (I hope)
-        }
-        return(haps[[same_phases[which(tie_score==max(tie_score))]]])
     } else {
         return(haps[[which(phase_probs==max(phase_probs))]])
     }
@@ -138,39 +155,6 @@ infer_dip <- function(momwin,progeny,haps,momphase1){
 which_phase <- function(haplotype,kidwin){
     three_genotypes=list()
     haplotype=unlist(haplotype)
-    three_genotypes[[1]]=haplotype+haplotype
-    three_genotypes[[2]]=haplotype+(1-haplotype)
-    three_genotypes[[3]]=(1-haplotype)+(1-haplotype)
-    geno_probs=as.numeric() #prob of each of three genotypes
-    for(geno in 1:3){
-        #log(probs[[2]][three_genotypes,kidwin] is the log prob. of kid's obs geno 
-        #given the current phased geno and given mom is het. (which is why probs[[2]])
-        geno_probs[geno]=sum( sapply(1:length(haplotype), function(zz) 
-            log( probs[[2]][three_genotypes[[geno]][zz]+1,kidwin[zz]+1])))
-    }
-    ### may introduce error
-    if(length(which(geno_probs==max(geno_probs)))!=1){recover()}
-    return(max(geno_probs))
-}
-############################################################################
-which_phase2 <- function(haplotype,kidwin, rr){
-    three_genotypes=list()
-    haplotype <- unlist(haplotype)
-    haplotyper <- c(haplotype[-length(haplotype)], 1-haplotype[length(haplotype)])
-    
-    haps <- list(haplotype, 1-haplotype, haplotyper, 1-haplotyper)
-    genos <- list(list())
-    for(i in 1:4){
-        genos[[i]][[j]] <- 0
-        for(j in 1:4){
-            genos[[i]][[j]] <- haps[[i]] + haps[[j]]
-        }
-    }
-    
-    #????
-    # %*% c(1,1,1,1) + t(c(haplotype, 1-haplotype, haplotyper, 1-haplotyper)) %*% c(1,1,1,1)
-    #probMx <- c(1-rr, 1-rr, rr, rr) %*% t(c(1-rr, 1-rr, rr, rr)))
-                    
     three_genotypes[[1]]=haplotype+haplotype
     three_genotypes[[2]]=haplotype+(1-haplotype)
     three_genotypes[[3]]=(1-haplotype)+(1-haplotype)
