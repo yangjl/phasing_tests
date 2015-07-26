@@ -25,3 +25,7 @@ plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE,
 
 
 
+
+
+
+
