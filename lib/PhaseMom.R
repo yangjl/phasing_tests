@@ -68,6 +68,12 @@ phase_mom <- function(estimated_mom, progeny, win_length, verbose=FALSE){
     haplist[[i]] <- list(mom_phase1, mom_phase2, hetsites[idxstart:length(hetsites)])
     ## list: hap1, hap2 and idx; info
     
+    ### link haplotypes
+    if(length(haplist) > 1){
+        link_haps()
+    }
+    
+    
     return(list(haplist=haplist, info=list(het=hetsites, nophase=nophase), ))
 }
 ############################################################################
@@ -173,41 +179,3 @@ which_phase <- function(haplotype,kidwin){
     if(length(which(geno_probs==max(geno_probs)))!=1){recover()}
     return(max(geno_probs))
 }
-
-
-
-############################################################################
-# Same as above, output kid's phase.
-#give this mom haplotype and a kid's diploid genotype over the window and returns maximum prob
-# Mendel is takenh care of in the probs[[]] matrix already 
-which_phase_kid<-function(haplotype,kidwin){
-    three_genotypes=list()
-    haplotype=unlist(haplotype)
-    three_genotypes[[1]]=haplotype+haplotype
-    three_genotypes[[2]]=haplotype+(1-haplotype)
-    three_genotypes[[3]]=(1-haplotype)+(1-haplotype)
-    geno_probs=as.numeric() #prob of each of three genotypes
-    for(geno in 1:3){
-        #log(probs[[2]][three_genotypes,kidwin] is the log prob. of kid's obs geno 
-        #given the current phased geno and given mom is het. (which is why probs[[2]])
-        geno_probs[geno]=sum( sapply(1:length(haplotype), function(zz) 
-            log( probs[[2]][three_genotypes[[geno]][zz]+1,kidwin[zz]+1])))
-    }
-    if(length(which(geno_probs==max(geno_probs)))!=1){recover()}
-    return(three_genotypes[[which(geno_probs==max(geno_probs))]])
-}
-############################################################################
-
-
-
-############################################################################
-#check mom's phase and count switches
-check_phase<-function(estimated_hets,est_phase,true_mom,new_site,old_site){
-    
-    phase=ifelse(est_phase[which(estimated_hets==new_site)]==true_mom[[1]][new_site],1,2)
-    old_phase=ifelse(est_phase[which(estimated_hets==old_site)]==true_mom[[1]][old_site],1,2)
-    switch=ifelse(phase==old_phase,0,1)
-    return(switch)
-}
-############################################################################
-
