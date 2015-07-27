@@ -18,6 +18,7 @@ phase_mom <- function(estimated_mom, progeny, win_length, verbose=FALSE){
             win_hap <- infer_dip(momwin,progeny,haps=mom_haps, returnhap=TRUE)
             mom_phase1=win_hap
             mom_phase2=1-win_hap
+            idxstart <- 1
         } else{
             win_hap <- infer_dip(momwin, progeny, haps=mom_haps, returnhap=FALSE)
             ### comparing current hap with old hap except the last bp -JLY
@@ -36,13 +37,13 @@ phase_mom <- function(estimated_mom, progeny, win_length, verbose=FALSE){
                 }
             } else {
                 ### potential recombination in kids, output previous haps and jump to next non-overlap window -JLY###
-                haplist[[i]] <- list(mom_phase1, mom_phase2)
+                idxend <- winstart + win_length -2
+                haplist[[i]] <- list(mom_phase1, mom_phase2, hetsites[idxstart:idxend])
                 i <- i +1
                 
-                winstart <- winstart + win_length -2
-                warning(paste("Likely recombination at position", winstart+1, sep=" "))
-                
+                ### warning(paste("Likely recombination at position", winstart+1, sep=" "))
                 ### if new window is still ambiguous, add 1bp and keep running until find the best hap
+                winstart <- winstart + win_length -2
                 while(is.null(win_hap)){
                     
                     winstart <- winstart + 1
@@ -51,7 +52,7 @@ phase_mom <- function(estimated_mom, progeny, win_length, verbose=FALSE){
                         nophase <- c(nophase, hetsites[winstart])
                     }
                 }
-                
+                idxstart <- winstart
                 mom_phase1 <- win_hap
                 mom_phase2 <- 1-win_hap
             }
@@ -63,8 +64,11 @@ phase_mom <- function(estimated_mom, progeny, win_length, verbose=FALSE){
     #myh1 <- replace(estimated_mom/2, hetsites, mom_phase1)
     #myh2 <- replace(estimated_mom/2, hetsites, 1-mom_phase1)
     #return(data.frame(h1=myh1, h2=myh2))
-    haplist[[i]] <- list(mom_phase1, mom_phase2)
-    return(list(info=list(het=hetsites, nophase=nophase), haplist=haplist))
+    if(verbose){ message(sprintf(">>> phasing done!")) }
+    haplist[[i]] <- list(mom_phase1, mom_phase2, hetsites[idxstart:length(hetsites)])
+    ## list: hap1, hap2 and idx; info
+    
+    return(list(haplist=haplist, info=list(het=hetsites, nophase=nophase), ))
 }
 ############################################################################
 link_haps <- function(momwin, progeny, haps, returnhap=FALSE){  

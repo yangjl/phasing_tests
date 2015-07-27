@@ -30,7 +30,7 @@ GenSeq = function(transMat, seqLen, seqMeans, seqSDs = NULL, initDistn = NULL)
     return( list(O=rO, Q=rQ) )
 }
 
-fwdPrbs = ComputeFwd(x$O, transMat = tM, seqMeans = seqMeans, seqSDs = seqSDs)
+#fwdPrbs = ComputeFwd(x$O, transMat = tM, seqMeans = seqMeans, seqSDs = seqSDs)
 ComputeFwd = function(obs, transMat, seqMeans, seqSDs = NULL, initDistn = NULL)
 {
     nState = ncol(transMat)
