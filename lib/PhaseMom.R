@@ -234,3 +234,25 @@ which_phase <- function(haplotype,kidwin){
     if(length(which(geno_probs==max(geno_probs)))!=1){recover()}
     return(max(geno_probs))
 }
+
+###########################################
+checkphasing <- function(newmom, sim){
+    diff <- tot <- 0
+    for(i in 1:length(newmom)){
+        truehap <- sim[[1]][newmom[[i]][[3]],]
+        esthap <- data.frame(h1=newmom[[i]][[1]], h2=newmom[[i]][[2]])
+        tab <- cbind(truehap, esthap)
+        idx <- which.max(c(cor(tab$hap1, tab$h1), cor(tab$hap1, tab$h2)))
+        
+        if(idx == 1){
+            a <- nrow(subset(tab, hap1 != h1))
+        }else{
+            a <- nrow(subset(tab, hap1 != h2))
+        }
+        
+        diff <- diff + a
+        tot <- tot + nrow(tab)
+    }
+    message(sprintf(">>> [ %s ] chunks and [ %s ] error rate", length(newmom), diff/tot))
+}
+
