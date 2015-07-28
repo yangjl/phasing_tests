@@ -86,7 +86,15 @@ phase_mom_chuck <- function(estimated_mom, progeny, win_length, verbose, mom_hap
                     mom_phase1[length(mom_phase1)+1] <- win_hap[length(win_hap)]
                     mom_phase2[length(mom_phase2)+1] <- 1-win_hap[length(win_hap)]
                 } else{
-                    stop(">>> Extending error !!!")
+                    diff1 <- sum(abs(mom_phase1[winstart:(winstart+(length(win_hap)-2))]-win_hap[1:length(win_hap)-1]))
+                    diff2 <- sum(abs(mom_phase2[winstart:(winstart+(length(win_hap)-2))]-win_hap[1:length(win_hap)-1]))
+                    if(diff1 > diff2){ #momphase1 is less similar to current inferred hap
+                        mom_phase2[length(mom_phase2)+1] <- win_hap[length(win_hap)]
+                        mom_phase1[length(mom_phase1)+1] <- 1-win_hap[length(win_hap)]
+                    } else{ #momphase1 is more similar
+                        mom_phase1[length(mom_phase1)+1] <- win_hap[length(win_hap)]
+                        mom_phase2[length(mom_phase2)+1] <- 1-win_hap[length(win_hap)]
+                    }
                 }
             } else {
                 ### potential recombination in kids, output previous haps and jump to next non-overlap window -JLY###

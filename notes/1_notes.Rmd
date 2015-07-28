@@ -32,6 +32,20 @@ inferred_mom=1 -> 00, 2->01, 3->11
 4. impute Kids
 
 
+-----------
+Running with John's idea, I just did chromosome-level (40K SNPs, 1.5 crossovers) sims assuming we know mom's genotype without error (e.g. from WGS data). V1 is switch errors, V2 is progeny genotyping error. This is with window of 11 SNPs and 10 progeny.  It is better than using an imputed mom, but not as much as I expected.  This will make a big difference however for small families and for plants with no selfs.
 
+-Jeff
+
+```
+> summary(x)
+       V1              V2
+ Min.   : 0.00   Min.   :0.04522
+ 1st Qu.: 0.00   1st Qu.:0.07948
+ Median : 0.00   Median :0.08783
+ Mean   : 2.14   Mean   :0.08827
+ 3rd Qu.: 2.00   3rd Qu.:0.09876
+ Max.   :95.00   Max.   :0.12422
+```
 
 
