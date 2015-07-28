@@ -77,7 +77,7 @@ phase_mom_chuck <- function(estimated_mom, progeny, win_length, verbose, mom_hap
             ### comparing current hap with old hap except the last bp -JLY
             if(!is.null(win_hap)){
                 
-                same=sum(mom_phase1[(length(mom_phase1)-8):length(mom_phase1)]==win_hap[1:length(win_hap)-1])
+                same=sum(mom_phase1[(length(mom_phase1)-win_length+2):length(mom_phase1)]==win_hap[1:length(win_hap)-1])
                 
                 if(same == 0){ #totally opposite phase of last window
                     mom_phase2[length(mom_phase2)+1] <- win_hap[length(win_hap)]
@@ -86,8 +86,8 @@ phase_mom_chuck <- function(estimated_mom, progeny, win_length, verbose, mom_hap
                     mom_phase1[length(mom_phase1)+1] <- win_hap[length(win_hap)]
                     mom_phase2[length(mom_phase2)+1] <- 1-win_hap[length(win_hap)]
                 } else{
-                    diff1 <- sum(abs(mom_phase1[winstart:(winstart+(length(win_hap)-2))]-win_hap[1:length(win_hap)-1]))
-                    diff2 <- sum(abs(mom_phase2[winstart:(winstart+(length(win_hap)-2))]-win_hap[1:length(win_hap)-1]))
+                    diff1 <- sum(abs(mom_phase1[(length(mom_phase1)-win_length+2):length(mom_phase1)]-win_hap[1:length(win_hap)-1]))
+                    diff2 <- sum(abs(mom_phase2[(length(mom_phase1)-win_length+2):length(mom_phase1)]-win_hap[1:length(win_hap)-1]))
                     if(diff1 > diff2){ #momphase1 is less similar to current inferred hap
                         mom_phase2[length(mom_phase2)+1] <- win_hap[length(win_hap)]
                         mom_phase1[length(mom_phase1)+1] <- 1-win_hap[length(win_hap)]
@@ -254,5 +254,6 @@ checkphasing <- function(newmom, sim){
         tot <- tot + nrow(tab)
     }
     message(sprintf(">>> [ %s ] chunks and [ %s ] error rate", length(newmom), diff/tot))
+    return(data.frame(piece=length(newmom), diff=diff, tot=tot))
 }
 

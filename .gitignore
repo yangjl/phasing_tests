@@ -5,3 +5,4 @@ phasing_tests.Rproj
 *.html
 .Rhistory
 .RData
+slurm/*

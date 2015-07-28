@@ -3,8 +3,12 @@
 
 ##get command line args
 options(echo=TRUE) # if you want see commands in output file
-args <- commandArgs(trailingOnly = TRUE)
+#args <- commandArgs(trailingOnly = TRUE)
+#crossovers=as.numeric(args[1]) # mean expected crossovers per chromosome; 0 = no recombination
+#job=args[2]
 
+
+#crossovers=1.5
 ### loading all the functions in folder "lib"
 sourceall <-function(rm=FALSE){
     if(rm) rm(list=ls())
@@ -12,13 +16,11 @@ sourceall <-function(rm=FALSE){
 }
 sourceall(rm=TRUE)
 
-crossovers=as.numeric(args[1]) # mean expected crossovers per chromosome; 0 = no recombination
-job=args[2]
 
-for(i in 1:2){
+for(i in 1:1){
     ### simulation perfect mom and noisy kids
-    set.seed(123567*i)
-    sim <- SimSelfer(size.array=10, het.error=0.7, hom.error=0.002, numloci=5000, rec=crossover, imiss=0.3)
+    set.seed(1235678*i)
+    sim <- SimSelfer(size.array=10, het.error=0.7, hom.error=0.002, numloci=40000, rec=1.5, imiss=0.3)
     #plotselfer(sim, kids=6:10, snps=40:100, cols=c("green", "blue"))
     
     
@@ -34,6 +36,6 @@ for(i in 1:2){
     #plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
     
     
-    checkphasing(newmom, sim)
-    
+    out <- checkphasing(newmom, sim)
+    write.table(out, paste0("out",i,".test"), sep="\t", row.names=FALSE, quote=FALSE)
 }

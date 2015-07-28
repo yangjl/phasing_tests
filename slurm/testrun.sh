@@ -7,4 +7,4 @@
 
 #only argument is mean (of poisson) of number of crossovers
 crossovers=$1
-R --no-save "--args $crossovers $SLURM_JOB_ID" < profiling/1.A.B_test_phase_mom.R
+R --no-save < profiling/1.A.B_test_phase_mom.R
