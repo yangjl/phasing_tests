@@ -1,7 +1,62 @@
 ############################################################################
 # Get mom's phase
 # should return two haps
-phase_mom <- function(estimated_mom, progeny, win_length, verbose=FALSE){
+
+### link haplotypes
+phasing <- function(estimated_mom, progeny, win_length, verbose=FALSE){
+    
+    haplist <- phase_mom_chuck(estimated_mom, progeny, win_length, verbose)
+    if(verbose){ message(sprintf(">>> start to join hap chunks ...")) }   
+    if(length(haplist) > 1){
+        outhaplist <- haplist[[1]] ### store the extended haps: hap1, hap2 and idx
+        hap1 <- haplist[[1]][[1]]
+        hap2 <- haplist[[1]][[2]]
+        idx <- haplist[[1]][[3]]
+        i <- 1
+        for(chunki in 2:length(haplist)){
+            if(verbose){ message(sprintf(">>> join chunks [ %s and %s / %s] ...", chunki-1, chunki, length(haplist))) }
+            # join two neighbor haplotype chunks
+            oldchunk <- haplist[[chunki-1]]
+            newchunk <- haplist[[chunki]]
+            hapidx <- c(oldchunk[[3]], newchunk[[3]])
+            haps <- list(c(oldchunk[[1]], newchunk[[1]]), c(oldchunk[[1]], newchunk[[2]]))
+            temhap <- link_haps(momwin=hapidx, progeny, haps, returnhap=FALSE)
+            if(!is.null(temhap)){
+                
+                same <- sum(hap1[(length(hap1)-length(oldchunk[[1]])+1):length(hap1)] == temhap[1:length(oldchunk[[1]])])
+                #same <- sum(mom_phase1[(length(mom_phase1)-8):length(mom_phase1)] == win_hap[1:length(win_hap)-1])
+                idx <- c(idx, newchunk[[3]])
+                if(same == 0){ #totally opposite phase of last window
+                    #hap2[length(mom_phase2)+1] <- win_hap[length(win_hap)]
+                    hap2 <- c(hap2, temhap[(length(oldchunk[[1]])+1):length(temhap)])
+                    hap1 <- c(hap1, 1-temhap[(length(oldchunk[[1]])+1):length(temhap)])
+                   
+                } else if(same== length(oldchunk[[1]]) ){ #same phase as last window
+                    #mom_phase1[length(mom_phase1)+1] <- win_hap[length(win_hap)]
+                    hap1 <- c(hap1, temhap[(length(oldchunk[[1]])+1):length(temhap)])
+                    hap2 <- c(hap2, temhap[(length(oldchunk[[1]])+1):length(temhap)])
+                } else{
+                    stop(">>> Extending error !!!")
+                }
+            } else {
+                i <- i +1
+                outhaplist[[i]] <- haplist[[chunki]]
+            } 
+        }
+        return(outhaplist)
+    }
+    else{
+        return(haplist)
+    }
+}
+    
+    
+
+    
+
+
+
+phase_mom_chuck <- function(estimated_mom, progeny, win_length, verbose){
     hetsites <- which(estimated_mom==1)
     # gets all possible haplotypes for X hets 
     mom_haps <- setup_haps(win_length) 
@@ -64,17 +119,11 @@ phase_mom <- function(estimated_mom, progeny, win_length, verbose=FALSE){
     #myh1 <- replace(estimated_mom/2, hetsites, mom_phase1)
     #myh2 <- replace(estimated_mom/2, hetsites, 1-mom_phase1)
     #return(data.frame(h1=myh1, h2=myh2))
-    if(verbose){ message(sprintf(">>> phasing done!")) }
+    #if(verbose){ message(sprintf(">>> phasing done!")) }
     haplist[[i]] <- list(mom_phase1, mom_phase2, hetsites[idxstart:length(hetsites)])
     ## list: hap1, hap2 and idx; info
-    
-    ### link haplotypes
-    if(length(haplist) > 1){
-        link_haps()
-    }
-    
-    
-    return(list(haplist=haplist, info=list(het=hetsites, nophase=nophase), ))
+    return(haplist)
+    #return(list(haplist=haplist, info=list(het=hetsites, nophase=nophase)))
 }
 ############################################################################
 link_haps <- function(momwin, progeny, haps, returnhap=FALSE){  
