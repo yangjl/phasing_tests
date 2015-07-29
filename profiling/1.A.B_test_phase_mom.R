@@ -35,7 +35,13 @@ for(i in 1:1){
     newmom <- phasing(estimated_mom, progeny, win_length, verbose=TRUE)
     #plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
     
-    
+    #KIDS GENOS
+    inferred_progeny=list()
+    mean.kid.geno.errors[mysim]=0;
+    for(z in 1:length(progeny)){
+        inferred_progeny[[z]]=which_phase_kid(newmom,progeny[[z]][[2]][estimated_hets] )
+        mean.kid.geno.errors[mysim]=mean.kid.geno.errors[mysim]+(sum(abs(progeny[[z]][[1]][estimated_hets]-inferred_progeny[[z]])))/length(progeny)
+    }
     out <- checkphasing(newmom, sim)
     write.table(out, paste0("out/out_",job,".txt"), sep="\t", row.names=FALSE, quote=FALSE)
 }
