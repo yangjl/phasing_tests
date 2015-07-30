@@ -22,3 +22,23 @@ sourceall(rm=T)
 ```
 
 
+------------
+# File Formats (PLINK format)
+
+It accepts sequences of the form `0/1/2/3` where `0/2` denote the 
+genotypes that are homozygous, `1` denotes a heterozygous genotype, and `3` denotes an unknown genotype.
+
+### The PED file format is as follows (`plink --no-sex, --no-pheno`):    
+- tab delimited
+- 'family ID' 'plant ID' 'Paternal ID' 'Maternal ID' 'genotype sequence'
+
+### The MAP file format
+- 'chr' 'SNPID' 'Base-pair position'
+
+### For example:
+```
+
+```
+
+
+

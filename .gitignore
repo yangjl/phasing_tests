@@ -6,3 +6,4 @@ phasing_tests.Rproj
 .Rhistory
 .RData
 slurm/*
+largedata/*
