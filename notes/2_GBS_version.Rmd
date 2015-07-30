@@ -1,0 +1,76 @@
+---
+title: "Notes"
+author: "Jinliang Yang"
+date: "July 23, 2015"
+output: html_document
+---
+
+# Infer mom's genotype by JRI
+
+```
+On farm in dir:
+
+/group/jrigrp4/phasing/cj_teosinte
+
+file is: genotypes_19_teos_v3_v2_coordinates
+
+10      239     chr10   239     10      239
+
+col 1-2, v2
+col 3-4, v3
+col 5-6, original v2 in original file to check for discrepancies
+
+Couldn't find any (to now). Cut as needed.
+```
+
+----------
+```
+v2_v3_GBS_teo_moms
+
+Same directory:
+
+/group/jrigrp4/phasing/cj_teosinte
+
+v2_chr  v2_coord        v3_coord        v3_chr  rs#   alleles chrom   pos     strand 
+1       6370    6370    chr1    S1_6370 T       1       6370    +  
+1       8210    8210    chr1    S1_8210 T       1       8210    +
+
+etc...
+```
+
+
+
+
+# Current issues
+1. ~~errors should not be used for inferring~~   
+2. ~~p unknown, could only be estimated from data.~~
+3. ~~missing data?~~
+4. ~~File IO~~
+
+5. switching error.?
+6. mom + dad
+
+# To Do List:
+1. ~~impute Mom~~ v
+2. ~~phase Mom~~ v
+3. phase Kids
+4. impute Kids
+
+
+-----------
+Running with John's idea, I just did chromosome-level (40K SNPs, 1.5 crossovers) sims assuming we know mom's genotype without error (e.g. from WGS data). V1 is switch errors, V2 is progeny genotyping error. This is with window of 11 SNPs and 10 progeny.  It is better than using an imputed mom, but not as much as I expected.  This will make a big difference however for small families and for plants with no selfs.
+
+-Jeff
+
+```
+> summary(x)
+       V1              V2
+ Min.   : 0.00   Min.   :0.04522
+ 1st Qu.: 0.00   1st Qu.:0.07948
+ Median : 0.00   Median :0.08783
+ Mean   : 2.14   Mean   :0.08827
+ 3rd Qu.: 2.00   3rd Qu.:0.09876
+ Max.   :95.00   Max.   :0.12422
+```
+
+

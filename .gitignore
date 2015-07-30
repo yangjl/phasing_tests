@@ -1,4 +1,4 @@
-out/*
+test/*
 error/*
 .Rproj.user
 phasing_tests.Rproj
