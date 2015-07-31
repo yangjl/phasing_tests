@@ -43,8 +43,25 @@ write.table(final.df, "parents.txt")
 
 rm(list=ls())
 
-library(plyr)
-fams <- read.table("parents.txt", header =TRUE)
+#library(plyr)
+ped <- read.table("/group/jrigrp4/phasing/cj_teosinte/parents.txt", header =TRUE)
+
+ped$parent1 <- as.character(ped$parent1)
+ped$parent2 <- as.character(ped$parent2)
+selfer <- subset(ped, parent1 == parent2)
+
+ox <- subset(ped, parent1 != parent2)
+
+
+pinfo <- data.frame(table(selfer$parent1))
+names(pinfo) <- c("founder", "nselfer")
+
+oxinfo <- data.frame(table(c(ox$parent1, ox$parent2)))
+names(oxinfo) <- c("founder", "nox")
+
+pinfo <- merge(pinfo, oxinfo, by="founder", all=TRUE)
+
+
 
 fams[]<- lapply(fams, as.character)
 x <- which(fams$parent1==fams$parent2)

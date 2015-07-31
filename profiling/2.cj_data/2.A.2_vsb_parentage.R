@@ -2,6 +2,13 @@
 ### July 30th, 2015
 ## phasing.R
 
+library(parallel)
+library(devtools)
+options(mc.cores=NULL)
+load_all("~/bin/tasselr")
+load_all("~/bin/ProgenyArray")
+
+ob <- load("largedata/cj_data.Rdata")
 # load sequence lengths from chromosome
 sl <- read.table("largedata/refgen2-lengths.txt", col.names=c("chrom", "length"),
                  stringsAsFactors = FALSE)
@@ -37,19 +44,18 @@ pa <- ProgenyArray(geno(teo)[, progeny$taxa],
                    geno(teo)[, parents$taxa],
                    mothers,
                    loci=teo@ranges)
-message("done.")
+
+#201511 loci are fixed
+
 ## Infer parentage
 # calculate allele frequencies
 pa <- calcFreqs(pa)
 
 # infer parents
-message("inferring parentage...  ", appendLF=FALSE)
 pa <- inferParents(pa, ehet=0.6, ehom=0.1, verbose=TRUE)
-message("done.")
-message("saving parentage...  ", appendLF=FALSE)
-save(pa, file=parentage_file)
-message("done.")
 
+
+save(pa, file= "largedata/cj_parentage.RData")
 
 
 

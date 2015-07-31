@@ -5,8 +5,6 @@
 library(parallel)
 library(devtools)
 options(mc.cores=NULL)
-
-#load_all("/home/vince251/src/tasselr")
 load_all("~/bin/tasselr")
 load_all("~/bin/ProgenyArray")
 
