@@ -71,5 +71,12 @@ save(pa, file= "largedata/cj_parentage.RData")
 #parents:  0.393
 #number of complete parental loci: 9202
 
+###########################################################################
 
-ped <- data.frame(pa@mothers)
+
+
+
+
+
+
+
