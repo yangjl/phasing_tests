@@ -73,10 +73,13 @@ save(pa, file= "largedata/cj_parentage.RData")
 
 ###########################################################################
 
+map <- as.data.frame(pa@ranges)
 
+geno1 <- pa@parents_geno
+geno1[is.na(geno1)] <- 3
+geno1 <- t(geno1)
 
-
-
+genodf <- data.frame(fid=1:70, iid=row.names(geno1), pid=0, mid=0, as.data.frame(geno1))
 
 
 
