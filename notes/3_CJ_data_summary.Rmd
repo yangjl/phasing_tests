@@ -5,7 +5,40 @@ date: "July 23, 2015"
 output: html_document
 ---
 
-# Infer mom's genotype by JRI
+# GBS data Summary
+
+## 1. loading HDF5 raw data
+ - loading in genotypes from HDF5 file `largedata/teo.h5`
+ - filtering biallelic loci: Removed `357,647` loci non-biallelic.
+ - [1:598043, 1:4875]
+
+```{r}
+source("../profiling/2.cj_data/2.A.1_vsb_hdf5.R")
+loading_h5()
+```
+
+
+
+
+
+```{r, eval=FALSE}
+
+par(mfrow=c(1,2))
+hist(imiss$imiss, main="per plant missing rate (N=4,875)", col="#008080", breaks=100, xlab="missing rate")
+abline(v=0.8, col="red", lty=2)
+hist(lmiss$lmiss, main="per locus missing rate (N=598,043)", col="#008080", breaks=100, xlab="missing rate")
+abline(v=0.8, col="red", lty=2)
+
+```
+
+```{r, eval=FALSE}
+par(mfrow=c(1,2))
+hist(maf$maf, main="Minor Allele Freq (N=598,043)", col="#008080", breaks=100, xlab="MAF")
+abline(v=0.8, col="red", lty=2)
+
+hist(subset(maf, maf>0.01)$maf, main="MAF > 0.01 (N=401,352)", col="#008080", breaks=100, xlab="MAF")
+abline(v=0.8, col="red", lty=2)
+```
 
 ```{r}
 ped <- read.table("../data/parentage_info.txt", header =TRUE)
@@ -27,7 +60,7 @@ pinfo <- merge(pinfo, oxinfo, by="founder", all=TRUE)
 pinfo$sid <- gsub("_1.*", "", pinfo$founder)
 pinfo$sid <- gsub("_mrg.*", "", pinfo$sid)
 
-wgs <- read.csv("data/wgs_teo19_id.csv")
+wgs <- read.csv("../data/wgs_teo19_id.csv")
 
 
 pinfo <- merge(pinfo, wgs, by.x="sid", by.y="id", all=TRUE)
