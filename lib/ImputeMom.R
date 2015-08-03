@@ -13,9 +13,10 @@ get_error_mat <- function(hom.error, het.error){
                             byrow=T,nrow=3,ncol=3)
     
     probs <- vector("list",3)
-    probs[[1]] <- gen_error_mat*matrix(c(1, 0, 0), nrow = 3,byrow=F,ncol=3)
+    ### 1: 00x01; 2: 01x01; 3: 11x01
+    probs[[1]] <- gen_error_mat*matrix(c(1/2, 1/2, 0), nrow = 3,byrow=F,ncol=3)
     probs[[2]] <- gen_error_mat*matrix(c(1/4, 1/2, 1/4), nrow = 3,byrow=F,ncol=3)
-    probs[[3]] <- gen_error_mat*matrix(c(0, 0, 1), nrow = 3,byrow=F,ncol=3)
+    probs[[3]] <- gen_error_mat*matrix(c(0, 1/2, 1/2), nrow = 3,byrow=F,ncol=3)
     
     gen_error_mat <- cbind(gen_error_mat, 1)
     probs[[1]] <- cbind(probs[[1]], 1)

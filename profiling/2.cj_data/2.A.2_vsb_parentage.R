@@ -53,9 +53,30 @@ pa <- calcFreqs(pa)
 
 # infer parents
 pa <- inferParents(pa, ehet=0.6, ehom=0.1, verbose=TRUE)
-
+#inferring parents for 4805 progeny
+#4804/4805 progeny completed
+#Warning message:
+#    In inferParents(pa, ehet = 0.6, ehom = 0.1, verbose = TRUE) :
+#    found 45 mothers that are inconsistent
 
 save(pa, file= "largedata/cj_parentage.RData")
+
+#ProgenyArray object: 598043 loci, 70 parents, 4805 progeny
+#number of chromosomes: 11
+#object size: 11640.408 Mb
+#number of progeny: 4805
+#number of parents: 70
+#proportion missing:
+#    progeny: 0.503
+#parents:  0.393
+#number of complete parental loci: 9202
+
+###########################################################################
+
+
+
+
+
 
 
 

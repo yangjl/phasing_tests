@@ -28,8 +28,8 @@ inferred_mom=1 -> 00, 2->01, 3->11
 # To Do List:
 1. ~~impute Mom~~ v
 2. ~~phase Mom~~ v
-3. phase Kids
-4. impute Kids
+3. ~~phase Kids~~ x
+4. impute Kids: with certain Mb window; HMM
 
 
 -----------
