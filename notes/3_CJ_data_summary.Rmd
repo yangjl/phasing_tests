@@ -13,60 +13,35 @@ output: html_document
  - [1:598043, 1:4875]
 
 ```{r}
-source("../profiling/2.cj_data/2.A.1_vsb_hdf5.R")
-loading_h5()
-```
-
-
-
-
-
-```{r, eval=FALSE}
+info <- read.csv("../data/teo_info.csv")
+imiss <- read.csv("../data/teo_imiss.csv")
 
 par(mfrow=c(1,2))
-hist(imiss$imiss, main="per plant missing rate (N=4,875)", col="#008080", breaks=100, xlab="missing rate")
-abline(v=0.8, col="red", lty=2)
-hist(lmiss$lmiss, main="per locus missing rate (N=598,043)", col="#008080", breaks=100, xlab="missing rate")
-abline(v=0.8, col="red", lty=2)
-
+hist(imiss$imiss, main="per plant (N=4,875)", col="#008080", breaks=100, xlab="missing rate")
+abline(v=0.8, col="red", lty=2, lwd=3)
+hist(info$lmiss, main="per locus (N=598,043)", col="#008080", breaks=100, xlab="missing rate")
+abline(v=0.8, col="red", lty=2, lwd=3)
 ```
 
-```{r, eval=FALSE}
+
+```{r, eval=TRUE}
 par(mfrow=c(1,2))
-hist(maf$maf, main="Minor Allele Freq (N=598,043)", col="#008080", breaks=100, xlab="MAF")
-abline(v=0.8, col="red", lty=2)
+hist(info$maf, main="Minor Allele Freq (N=598,043)", col="#008080", breaks=100, xlab="MAF")
+abline(v=0.8, col="red", lty=2, lwd=3)
 
-hist(subset(maf, maf>0.01)$maf, main="MAF > 0.01 (N=401,352)", col="#008080", breaks=100, xlab="MAF")
-abline(v=0.8, col="red", lty=2)
+hist(subset(info, maf>0.01)$maf, main="MAF >0.01 (N=401,352)", col="#008080", breaks=100, xlab="MAF")
+abline(v=0.8, col="red", lty=2, lwd=3)
 ```
+
+# Parentage Infomation
+
+
 
 ```{r}
-ped <- read.table("../data/parentage_info.txt", header =TRUE)
-
-ped$parent1 <- as.character(ped$parent1)
-ped$parent2 <- as.character(ped$parent2)
-
-selfer <- subset(ped, parent1 == parent2)
-ox <- subset(ped, parent1 != parent2)
-
-
-pinfo <- data.frame(table(selfer$parent1))
-names(pinfo) <- c("founder", "nselfer")
-
-oxinfo <- data.frame(table(c(ox$parent1, ox$parent2)))
-names(oxinfo) <- c("founder", "nox")
-
-pinfo <- merge(pinfo, oxinfo, by="founder", all=TRUE)
-pinfo$sid <- gsub("_1.*", "", pinfo$founder)
-pinfo$sid <- gsub("_mrg.*", "", pinfo$sid)
-
-wgs <- read.csv("../data/wgs_teo19_id.csv")
-
-
-pinfo <- merge(pinfo, wgs, by.x="sid", by.y="id", all=TRUE)
-
-sub <- subset(pinfo, !is.na(WGS))
-
+pinfo <- read.table("../data/parentage_sum.txt", header=TRUE)
+dim(pinfo)
+subset(pinfo, !is.na(WGS))
+subset(pinfo, nox < 30)
 
 ```
 
