@@ -30,6 +30,12 @@ loading_h5 <- function(){
 ######################################################################################
 
 get_info <- function(){
+    library(parallel)
+    library(devtools)
+    options(mc.cores=NULL)
+    load_all("~/bin/tasselr")
+    load_all("~/bin/ProgenyArray")
+    
     ob <- load("largedata/cj_data.Rdata")
     
     pos <- as.data.frame(granges(teo))

@@ -7,7 +7,7 @@ output: html_document
 
 # GBS data Summary
 
-## 1. loading HDF5 raw data
+## loading HDF5 raw data
  - loading in genotypes from HDF5 file `largedata/teo.h5`
  - filtering biallelic loci: Removed `357,647` loci non-biallelic.
  - [1:598043, 1:4875]
@@ -44,6 +44,11 @@ subset(pinfo, !is.na(WGS))
 subset(pinfo, nox < 30)
 
 ```
+
+
+# Comparing GBS vs. WGS
+
+
 
 
 ----------
