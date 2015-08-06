@@ -26,7 +26,6 @@ genodf <- data.frame(fid=1:70, iid=row.names(geno1), pid=0, mid=0, as.data.frame
 
 
 ##################
-
 getwgs <- function(){
     library("data.table", lib="~/bin/Rlib/")
     genoteo <- fread("/group/jrigrp4/phasing/cj_teosinte/genotypes_teosinte_19_noScaffolds_or_organelles.geno", header=FALSE)
@@ -53,24 +52,6 @@ getwgs <- function(){
     save(file="largedata/wgs_teo19.RData", list=c("steo", "v"))
     
 }
-
-
-comp_allels <- function(){
-    ob <- load("largedata/wgs_teo19.RData")
-    
-    info <- read.csv("largedata//teo_info.csv")
-    info$snpid <- gsub("S", "", info$snpid)
-    info <- merge(info, v[, 5:6], by.x="snpid", by.y="snpid2")
-    comp <- merge(steo[, c("snpid", "major", "minor")], info[, c(11, 2:3)], by.x="snpid", by.y="snpid3")
-    
-    message(sprintf("###>>> WGS [ %s ] | GBS [ %s ] | shared [ %s ]", nrow(steo), nrow(info), nrow(comp)))
-    
-    ### Teo19 WGS V3 and V4 are major/minor
-    idx <- which((comp$major == comp$ref & comp$minor == comp$alt) | (comp$major == comp$alt & comp$minor == comp$ref))
-    message(sprintf("###>>> consistent SNP calling [ %s ]", length(idx)))
-    
-}
-
 
 
 

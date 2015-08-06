@@ -53,6 +53,26 @@ subset(pinfo, nox < 30)
 
 ----------
 
+```{r}
 
+par(mfrow=c(1,2)) 
+hist(lmiss1, main="WGS (N=301,249)", ylim=c(0, 70000), col="#008080", breaks=50, xlab="missing rate")
+#abline(v=0.8, col="red", lty=2, lwd=3)
+hist(lmiss2, main="GBS (N=301,249)", ylim=c(0, 70000), col="#008080", breaks=50, xlab="missing rate")
+#abline(v=0.8, col="red", lty=2, lwd=3)
+
+par(mfrow=c(1,2)) 
+hist(imiss1, main="WGS (N=19)",  col="#008080",  xlab="missing rate")
+#abline(v=0.8, col="red", lty=2, lwd=3)
+hist(imiss2, main="GBS (N=19)",  col="#008080",  xlab="missing rate")
+#abline(v=0.8, col="red", lty=2, lwd=3)
+
+par(mfrow=c(1,2)) 
+hist(maf1, main="WGS (N=301,249)",  col="#008080",  xlab="MAF")
+#abline(v=0.8, col="red", lty=2, lwd=3)
+hist(maf2, main="GBS (N=301,249)",  col="#008080",  xlab="MAF")
+#abline(v=0.8, col="red", lty=2, lwd=3)
+
+```
 
 
