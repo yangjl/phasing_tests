@@ -62,7 +62,7 @@ maf_missing <- function(wgs, gbs, plot=TRUE){
 }
 
 
-
+###########################################################
 comp_alleles <- function(wgs, gbs){
     
     wgs <- wgs[order(wgs$snpid2), ]
@@ -90,7 +90,7 @@ comp_alleles <- function(wgs, gbs){
     
 }
 
-
+##################################################################
 recode <- function(){
     ob <- load("largedata/wgs_teo19.RData")
     ### steo: 396818; v

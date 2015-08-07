@@ -26,7 +26,7 @@ loading_h5 <- function(){
     save(list="teo", file="largedata/cj_data.Rdata")
 }
     
-#loading_h5()
+loading_h5()
 ######################################################################################
 
 get_info <- function(){
@@ -70,6 +70,6 @@ get_info <- function(){
     write.table(info, "data/teo_info.csv", sep=",", row.names=FALSE, quote=FALSE)
     write.table(imiss, "data/teo_imiss.csv", sep=",", quote=FALSE)
 }
-
-
+#######################
+get_info()
 

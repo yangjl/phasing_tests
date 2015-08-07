@@ -2,17 +2,20 @@
 title: "Notes"
 author: "Jinliang Yang"
 date: "July 23, 2015"
-output: html_document
+output: pdf_document
 ---
 
 # GBS data Summary
 
-## loading HDF5 raw data
+## Loading HDF5 format GBS raw data
  - loading in genotypes from HDF5 file `largedata/teo.h5`
- - filtering biallelic loci: Removed `357,647` loci non-biallelic.
- - [1:598043, 1:4875]
+ - filtering biallelic loci: Removed `357,647` non-biallelic loci.
+ - data matrix dimension: [1:598043, 1:4875]
+
+The missing rates were plotted as below for 598,043 SNPs of 4,875 plants (70/4,875 (`r round(70/4875*100, 1)`%) are founder lines). Note several plants have very high SNP missing rate, i.e. > 80%. Some of them even have a 100% missing rate. In addition, ~20% of them have very high (>80%) per locus missing rate.
 
 ```{r}
+# source("../profiling/2.ci_data/2.A.1_vsb_hdf5.R")
 info <- read.csv("../data/teo_info.csv")
 imiss <- read.csv("../data/teo_imiss.csv")
 
@@ -33,17 +36,36 @@ hist(subset(info, maf>0.01)$maf, main="MAF >0.01 (N=401,352)", col="#008080", br
 abline(v=0.8, col="red", lty=2, lwd=3)
 ```
 
+See above the MAF plots. Note `r nrow(subset(info, maf<0.01))` SNPs have the MAF < 0.01.
+
+
 # Parentage Infomation
 
-
-
 ```{r}
+# source("../profiling/2.ci_data/2.B.1_cj_parentage.R")
 pinfo <- read.table("../data/parentage_sum.txt", header=TRUE)
-dim(pinfo)
+#dim(pinfo) 68,5
 subset(pinfo, !is.na(WGS))
 subset(pinfo, nox < 30)
 
 ```
+
+We calculated the number of selfers and the number of outcrossers associated with the founder lines. In total, `r nrow(pinfo)` unique founder lines were involved in the crosses. Among them, `r nrow(subset(pinfo, !is.na(nselfer)))` founder lines had selfing families; and ten smallest family size were `r head(sort(pinfo$nselfer[!is.na(pinfo$nselfer)]), 10)`.   
+
+
+# WGS of 19 _Teosintes_
+
+```{r}
+# source("../profiling/2.ci_data/2.B.2_cj_wgsdata.R")
+
+
+```
+
+
+
+
+
+
 
 
 # Comparing GBS vs. WGS
@@ -53,7 +75,7 @@ subset(pinfo, nox < 30)
 
 ----------
 
-```{r}
+```{r eval=FALSE}
 
 par(mfrow=c(1,2)) 
 hist(lmiss1, main="WGS (N=301,249)", ylim=c(0, 70000), col="#008080", breaks=50, xlab="missing rate")
