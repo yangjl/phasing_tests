@@ -1,7 +1,7 @@
 ### Jinliang Yang
 ### 8/4/2015
 
-save(pa, file= "largedata/cj_parentage.RData")
+#save(pa, file= "largedata/cj_parentage.RData")
 
 #ProgenyArray object: 598043 loci, 70 parents, 4805 progeny
 #number of chromosomes: 11
@@ -13,18 +13,6 @@ save(pa, file= "largedata/cj_parentage.RData")
 #parents:  0.393
 #number of complete parental loci: 9202
 
-###########################################################################
-
-map <- as.data.frame(pa@ranges)
-
-geno1 <- pa@parents_geno
-geno1[is.na(geno1)] <- 3
-geno1 <- t(geno1)
-
-genodf <- data.frame(fid=1:70, iid=row.names(geno1), pid=0, mid=0, as.data.frame(geno1))
-
-
-
 ##################
 getwgs <- function(){
     library("data.table", lib="~/bin/Rlib/")
@@ -33,7 +21,7 @@ getwgs <- function(){
     
     genoteo$snpid <- paste(genoteo$V1, genoteo$V2, sep="_")
     
-    #### comparing the alt and ref alleles
+    #### transform the ids
     v <- read.table("data/GBS_teos_moms.v3.txt", header=TRUE)
     v <- subset(v, !is.na(v3_coord))
     v$v3_chr <- gsub("chr", "", v$v3_chr)
@@ -54,7 +42,7 @@ getwgs <- function(){
 }
 
 
-
+getwgs()
 
 
 

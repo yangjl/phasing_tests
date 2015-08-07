@@ -1,41 +1,27 @@
 ### Jinliang Yang
 ### 8/5/2015
 
+### load WGS data of 19 teosintes and recoded to `0, 1, 2` format and `3` indicates missing.
 wgs <- recode()
 ###>>> WGS [ 396818 ] | GBS [ 597607 ] | shared [ 315514 ]
 ###>>> consistent SNP calling [ 301249 ]
 
+### load GBS data of 19 teosintes
 gbs <- gbsgeno(wgs)
 ###>>> GBS of [ 598043 ] SNPs and [ 19 ] plants
 ###>>> Common SNPs [ 301249 ] 
 
+### estimate the GBS SNP calling error rate
 res <- comp_alleles(wgs, gbs)
+###>>> Heterozygote error rate [ 49.1 ] and Homozygote error rate [ 1.7 ]
+###>>> het err=[ 494582 ]; het tot=[ 1008196 ]; hom err=[ 45239 ]; hom err=[ 2714395 ]
 
-
-
-
-
-### calculate missing rates
-imiss <- apply(genos, 2, function(x) return(sum(is.na(x))/598043))
-imiss <- data.frame(imiss)
-
-lmiss <- apply(genos, 1, function(x) return(sum(is.na(x))/4875))
-lmiss <- data.frame(lmiss)
-
-### calculate maf
-maf <- apply(genos, 1, function(x){
-    x <- x[!is.na(x)]
-    c0 <- sum(x == 0)
-    c1 <- sum(x == 1)
-    c2 <- sum(x == 2)
-    return(min(c(2*c0 +c1, c1 + 2*c2))/(2*(c0 + c1 + c2)) )
-})
-
-maf <- data.frame(maf)
+### calculate missing rate and MAF for 19 teosintes
+maf_missing(wgs, gbs)
 
 
 #######################################
-maf_missing <- function(wgs, gbs, plot=TRUE){
+maf_missing <- function(wgs, gbs){
     lmiss1 <- apply(wgs[, 9:27], 1, function(x) return(sum(x==3)/19))
     lmiss2 <- apply(gbs[, 3:21], 1, function(x) return(sum(x==3)/19))
     
@@ -57,7 +43,9 @@ maf_missing <- function(wgs, gbs, plot=TRUE){
     maf1 <- getmaf(wgs[, 9:27])
     maf2 <- getmaf(gbs[, 3:21])
     
-        
+    outfile="cache/teo_gbs_wgs.RData"
+    message(sprintf("###>>> Data write to: [ %s]", outfile))
+    save(file=outfile, list=c("lmiss1", "lmiss2", "imiss1", "imiss2", "maf1", "maf2"))    
     
 }
 
@@ -86,6 +74,8 @@ comp_alleles <- function(wgs, gbs){
         }
         
     }
+    message(sprintf("###>>> Heterozygote error rate [ %s ] and Homozygote error rate [ %s ]", round(heterr/hettot, 3)*100, round(homerr/homtot, 3)*100))
+    message(sprintf("###>>> het err=[ %s ]; het tot=[ %s ]; hom err=[ %s ]; hom err=[ %s ]", heterr, hettot, homerr, homtot))
     return(c(heterr, hettot, homerr, homtot))
     
 }

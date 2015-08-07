@@ -7,7 +7,9 @@ output: pdf_document
 
 # GBS data Summary
 
-## Loading HDF5 format GBS raw data
+## Missing rate and MAF of GBS data
+
+Loading HDF5 format GBS raw data
  - loading in genotypes from HDF5 file `largedata/teo.h5`
  - filtering biallelic loci: Removed `357,647` non-biallelic loci.
  - data matrix dimension: [1:598043, 1:4875]
@@ -50,19 +52,45 @@ subset(pinfo, nox < 30)
 
 ```
 
-We calculated the number of selfers and the number of outcrossers associated with the founder lines. In total, `r nrow(pinfo)` unique founder lines were involved in the crosses. Among them, `r nrow(subset(pinfo, !is.na(nselfer)))` founder lines had selfing families; and ten smallest family size were `r head(sort(pinfo$nselfer[!is.na(pinfo$nselfer)]), 10)`.   
+We calculated the number of selfers and the number of outcrossers associated with the founder lines. In total, `r nrow(pinfo)` unique founder lines were involved in the crosses. Among them, `r nrow(subset(pinfo, !is.na(nselfer)))` founder lines had selfing families; and the bottom ten smallest family had their family size of `r head(sort(pinfo$nselfer[!is.na(pinfo$nselfer)]), 10)`, respectively.   
 
 
 # WGS of 19 _Teosintes_
 
-```{r}
+```{r, eval=FALSE}
 # source("../profiling/2.ci_data/2.B.2_cj_wgsdata.R")
 
+source("../profiling/2.ci_data/2.B.3_cj_comp.R")
+
+### load WGS data of 19 teosintes and recoded to `0, 1, 2` format and `3` indicates missing.
+wgs <- recode()
+###>>> WGS [ 396818 ] | GBS [ 597607 ] | shared [ 315514 ]
+###>>> consistent SNP calling [ 301249 ]
+
+### load GBS data of 19 teosintes
+gbs <- gbsgeno(wgs)
+###>>> GBS of [ 598043 ] SNPs and [ 19 ] plants
+###>>> Common SNPs [ 301249 ] 
+
+### estimate the GBS SNP calling error rate
+res <- comp_alleles(wgs, gbs)
+###>>> Heterozygote error rate [ 49.1 ] and Homozygote error rate [ 1.7 ]
+###>>> het err=[ 494582 ]; het tot=[ 1008196 ]; hom err=[ 45239 ]; hom err=[ 2714395 ]
+
+### calculate missing rate and MAF for 19 teosintes
+maf_missing(wgs, gbs)
+###>>> Data write to: [ cache/teo_gbs_wgs.RData]
 
 ```
 
 
+From this file `/group/jrigrp4/phasing/cj_teosinte/genotypes_teosinte_19_noScaffolds_or_organelles.geno`, a total number of 96,908,505 SNPs were called for 19 _Teosinte_ lines, of which 315,514 matched with GBS SNPs according to their v2 coordinates.
 
+After checking `ref` and `alt` SNP calls, `301,249` sites are consistent between two datasets (concordant rate `r round(301249/315514, 3)*100`%). We then recoded the SNPs to `0, 1, 2` format, where the numbers indicated the copies of alternate alleles. 
+
+The heterozygote error rate for GBS was estimated to be `49.1%`; and the homozygote error rate was estimated to be `1.7%`.
+
+Finally, we calculate the missing rate and MAF for 19 teosintes of the two datasets, respectively. The results were stored in `cache/teo_gbs_wgs.RData`. In the following code chunk, we will plot the results.
 
 
 
