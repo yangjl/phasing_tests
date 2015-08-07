@@ -33,7 +33,7 @@ genotypes that are homozygous, `1` denotes a heterozygous genotype, and `3` deno
 - 'family ID' 'plant ID' 'Paternal ID' 'Maternal ID' 'genotype sequence'
 
 ### The MAP file format
-- 'chr' 'SNPID' 'Base-pair position'
+- 'chr' 'SNPID' 'Base-pair position' 'genetic position'
 
 ### For example:
 ```

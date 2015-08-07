@@ -92,29 +92,20 @@ The heterozygote error rate for GBS was estimated to be `49.1%`; and the homozyg
 
 Finally, we calculate the missing rate and MAF for 19 teosintes of the two datasets, respectively. The results were stored in `cache/teo_gbs_wgs.RData`. In the following code chunk, we will plot the results.
 
-
-
-
-
-# Comparing GBS vs. WGS
-
-
-
-
-----------
-
-```{r eval=FALSE}
-
+```{r eval=T}
+ob <- load("../cache/teo_gbs_wgs.RData")
 par(mfrow=c(1,2)) 
-hist(lmiss1, main="WGS (N=301,249)", ylim=c(0, 70000), col="#008080", breaks=50, xlab="missing rate")
+hist(lmiss1, main="WGS (N=301,249)", ylim=c(0, 70000), col="#008080", 
+     breaks=50, xlab="locus missing rate")
 #abline(v=0.8, col="red", lty=2, lwd=3)
-hist(lmiss2, main="GBS (N=301,249)", ylim=c(0, 70000), col="#008080", breaks=50, xlab="missing rate")
+hist(lmiss2, main="GBS (N=301,249)", ylim=c(0, 70000), col="#008080", 
+     breaks=50, xlab="locus missing rate")
 #abline(v=0.8, col="red", lty=2, lwd=3)
 
 par(mfrow=c(1,2)) 
-hist(imiss1, main="WGS (N=19)",  col="#008080",  xlab="missing rate")
+hist(imiss1, main="WGS (N=19)",  col="#008080",  xlab="individual missing rate")
 #abline(v=0.8, col="red", lty=2, lwd=3)
-hist(imiss2, main="GBS (N=19)",  col="#008080",  xlab="missing rate")
+hist(imiss2, main="GBS (N=19)",  col="#008080",  xlab="individual missing rate")
 #abline(v=0.8, col="red", lty=2, lwd=3)
 
 par(mfrow=c(1,2)) 
@@ -125,4 +116,14 @@ hist(maf2, main="GBS (N=301,249)",  col="#008080",  xlab="MAF")
 
 ```
 
+
+
+
+
+# Comparing GBS vs. WGS
+
+
+
+
+----------
 
