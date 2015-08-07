@@ -26,10 +26,16 @@ loading_h5 <- function(){
     save(list="teo", file="largedata/cj_data.Rdata")
 }
     
-#loading_h5()
+loading_h5()
 ######################################################################################
 
 get_info <- function(){
+    library(parallel)
+    library(devtools)
+    options(mc.cores=NULL)
+    load_all("~/bin/tasselr")
+    load_all("~/bin/ProgenyArray")
+    
     ob <- load("largedata/cj_data.Rdata")
     
     pos <- as.data.frame(granges(teo))
@@ -64,6 +70,6 @@ get_info <- function(){
     write.table(info, "data/teo_info.csv", sep=",", row.names=FALSE, quote=FALSE)
     write.table(imiss, "data/teo_imiss.csv", sep=",", quote=FALSE)
 }
-
-
+#######################
+get_info()
 

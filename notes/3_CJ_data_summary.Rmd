@@ -2,77 +2,99 @@
 title: "Notes"
 author: "Jinliang Yang"
 date: "July 23, 2015"
-output: html_document
+output: pdf_document
 ---
 
 # GBS data Summary
 
-## 1. loading HDF5 raw data
+## Loading HDF5 format GBS raw data
  - loading in genotypes from HDF5 file `largedata/teo.h5`
- - filtering biallelic loci: Removed `357,647` loci non-biallelic.
- - [1:598043, 1:4875]
+ - filtering biallelic loci: Removed `357,647` non-biallelic loci.
+ - data matrix dimension: [1:598043, 1:4875]
+
+The missing rates were plotted as below for 598,043 SNPs of 4,875 plants (70/4,875 (`r round(70/4875*100, 1)`%) are founder lines). Note several plants have very high SNP missing rate, i.e. > 80%. Some of them even have a 100% missing rate. In addition, ~20% of them have very high (>80%) per locus missing rate.
 
 ```{r}
-source("../profiling/2.cj_data/2.A.1_vsb_hdf5.R")
-loading_h5()
-```
-
-
-
-
-
-```{r, eval=FALSE}
+# source("../profiling/2.ci_data/2.A.1_vsb_hdf5.R")
+info <- read.csv("../data/teo_info.csv")
+imiss <- read.csv("../data/teo_imiss.csv")
 
 par(mfrow=c(1,2))
-hist(imiss$imiss, main="per plant missing rate (N=4,875)", col="#008080", breaks=100, xlab="missing rate")
-abline(v=0.8, col="red", lty=2)
-hist(lmiss$lmiss, main="per locus missing rate (N=598,043)", col="#008080", breaks=100, xlab="missing rate")
-abline(v=0.8, col="red", lty=2)
-
+hist(imiss$imiss, main="per plant (N=4,875)", col="#008080", breaks=100, xlab="missing rate")
+abline(v=0.8, col="red", lty=2, lwd=3)
+hist(info$lmiss, main="per locus (N=598,043)", col="#008080", breaks=100, xlab="missing rate")
+abline(v=0.8, col="red", lty=2, lwd=3)
 ```
 
-```{r, eval=FALSE}
+
+```{r, eval=TRUE}
 par(mfrow=c(1,2))
-hist(maf$maf, main="Minor Allele Freq (N=598,043)", col="#008080", breaks=100, xlab="MAF")
-abline(v=0.8, col="red", lty=2)
+hist(info$maf, main="Minor Allele Freq (N=598,043)", col="#008080", breaks=100, xlab="MAF")
+abline(v=0.8, col="red", lty=2, lwd=3)
 
-hist(subset(maf, maf>0.01)$maf, main="MAF > 0.01 (N=401,352)", col="#008080", breaks=100, xlab="MAF")
-abline(v=0.8, col="red", lty=2)
+hist(subset(info, maf>0.01)$maf, main="MAF >0.01 (N=401,352)", col="#008080", breaks=100, xlab="MAF")
+abline(v=0.8, col="red", lty=2, lwd=3)
 ```
+
+See above the MAF plots. Note `r nrow(subset(info, maf<0.01))` SNPs have the MAF < 0.01.
+
+
+# Parentage Infomation
 
 ```{r}
-ped <- read.table("../data/parentage_info.txt", header =TRUE)
+# source("../profiling/2.ci_data/2.B.1_cj_parentage.R")
+pinfo <- read.table("../data/parentage_sum.txt", header=TRUE)
+#dim(pinfo) 68,5
+subset(pinfo, !is.na(WGS))
+subset(pinfo, nox < 30)
 
-ped$parent1 <- as.character(ped$parent1)
-ped$parent2 <- as.character(ped$parent2)
+```
 
-selfer <- subset(ped, parent1 == parent2)
-ox <- subset(ped, parent1 != parent2)
-
-
-pinfo <- data.frame(table(selfer$parent1))
-names(pinfo) <- c("founder", "nselfer")
-
-oxinfo <- data.frame(table(c(ox$parent1, ox$parent2)))
-names(oxinfo) <- c("founder", "nox")
-
-pinfo <- merge(pinfo, oxinfo, by="founder", all=TRUE)
-pinfo$sid <- gsub("_1.*", "", pinfo$founder)
-pinfo$sid <- gsub("_mrg.*", "", pinfo$sid)
-
-wgs <- read.csv("../data/wgs_teo19_id.csv")
+We calculated the number of selfers and the number of outcrossers associated with the founder lines. In total, `r nrow(pinfo)` unique founder lines were involved in the crosses. Among them, `r nrow(subset(pinfo, !is.na(nselfer)))` founder lines had selfing families; and ten smallest family size were `r head(sort(pinfo$nselfer[!is.na(pinfo$nselfer)]), 10)`.   
 
 
-pinfo <- merge(pinfo, wgs, by.x="sid", by.y="id", all=TRUE)
+# WGS of 19 _Teosintes_
 
-sub <- subset(pinfo, !is.na(WGS))
+```{r}
+# source("../profiling/2.ci_data/2.B.2_cj_wgsdata.R")
 
 
 ```
+
+
+
+
+
+
+
+
+# Comparing GBS vs. WGS
+
+
 
 
 ----------
 
+```{r eval=FALSE}
 
+par(mfrow=c(1,2)) 
+hist(lmiss1, main="WGS (N=301,249)", ylim=c(0, 70000), col="#008080", breaks=50, xlab="missing rate")
+#abline(v=0.8, col="red", lty=2, lwd=3)
+hist(lmiss2, main="GBS (N=301,249)", ylim=c(0, 70000), col="#008080", breaks=50, xlab="missing rate")
+#abline(v=0.8, col="red", lty=2, lwd=3)
+
+par(mfrow=c(1,2)) 
+hist(imiss1, main="WGS (N=19)",  col="#008080",  xlab="missing rate")
+#abline(v=0.8, col="red", lty=2, lwd=3)
+hist(imiss2, main="GBS (N=19)",  col="#008080",  xlab="missing rate")
+#abline(v=0.8, col="red", lty=2, lwd=3)
+
+par(mfrow=c(1,2)) 
+hist(maf1, main="WGS (N=301,249)",  col="#008080",  xlab="MAF")
+#abline(v=0.8, col="red", lty=2, lwd=3)
+hist(maf2, main="GBS (N=301,249)",  col="#008080",  xlab="MAF")
+#abline(v=0.8, col="red", lty=2, lwd=3)
+
+```
 
 
