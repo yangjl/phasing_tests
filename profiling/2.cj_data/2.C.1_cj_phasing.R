@@ -3,7 +3,7 @@
 
 
 ### write PLINK format file
-write_plink(wgs, cols=9:27)
+FormatData(wgs, cols=9:27)
 
 
 
@@ -14,14 +14,21 @@ FormatData <- function(wgs, cols){
     
     ### load WGS data of 19 teosintes and recoded to `0, 1, 2` format and `3` indicates missing.
     wgs <- recode()
-    wgs <- wgs[order(wgs$chr, wgs$pos), ]
+    
     ## PED file
     #'family ID' 'plant ID' 'Paternal ID' 'Maternal ID' 'genotype sequence'
-    
+    wgs$snpid2 <- paste0("S", wgs$snpid2)
+    #wgs <- wgs[order(wgs$chr, wgs$pos), ]
     
     ### SNP matrix comparison
     ob <- load("largedata/GBS_genomx.RData")
     
+    nms <- gsub("_1\\:.*|_mrg\\:.*", "", colnames(genos))
+    subgeno <- genos[rownames(genos) %in% wgs$snpid2, ]
+    #subgeno <- subgeno[order(rownames(subgeno)), ]
+    
+    
+    #############################################################################################
     #parentage pafile="data/parentage_info.txt"
     pa <- read.table("data/parentage_info.txt", header=T)
     
@@ -30,30 +37,14 @@ FormatData <- function(wgs, cols){
     pa <- subset(pa, parent1==parent2)
     
     
+    for(i in cols){
+        mid <- names(wgs)[i]
+        kids <- subgeno[, subset(pa, parent1==mid)$proid]
+        kids[is.na(kids)] <- 3
+        mk <- merge(wgs[, c("snpid", "snpid2", "chr", "pos", mid)], as.data.frame(kids), by.x="snpid2", by.y="row.names")
+        mk <- mk[order(mk$chr, mk$pos),]
+        message(sprintf("###>>> Common SNPs [ %s ] of family [ %s ] with kids [ N=%s]", nrow(subgeno), mid, ncol(kids)))
+        save(file=paste0("largedata/sfamdata/", mid, ".RData"), list="mk")
+    }
     
-    
-    
-    subgeno <- genos[, which(nms %in% names(steo)[9:27])]
-    subgeno[is.na(subgeno)] <- 3
-    subgeno <- as.data.frame(subgeno)
-    names(subgeno) <- gsub("_1\\:.*|_mrg\\:.*", "", names(subgeno))
-    
-    
-    
-    
-    for(i in 1:10){
-        
-        subwgs <- subset(wgs, chr == i)
-        tem <- data.frame(fid=1:length(cols), uid=names(subwgs)[cols], pid=0, mid=0)
-        tped <- t(subwgs[, cols])
-        ped <- cbind(tem, tped)
-        ## MAP file
-        map <- subwgs[, c("chr", "snpid", "pos", "ref")]
-        names(map)[4] <- "genpos"
-        map$genpos <- 0
-        
-        message(sprintf("###>>> wrote [ %s ] SNPs on [ Chr%s ]", nrow(subwgs), i))
-        write.table(ped, paste0("largedata/wgs19_chr", i, ".ped"), sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
-        write.table(map, paste0("largedata/wgs19_chr", i, ".map"), sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
-    } 
 }
