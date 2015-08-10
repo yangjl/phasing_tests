@@ -3,14 +3,14 @@
 
 
 ### write PLINK format file
-FormatData(wgs, cols=9:27)
+#FormatData(wgs, cols=9:27)
 
-
-
-ob <- load("largedata/sfamdata/PC_I11_ID2.RData")
 
 ### loading all the functions in folder "lib"
 f <- sapply(list.files(pattern="[.]R$", path="lib", full.names=TRUE), source)
+
+ob <- load("largedata/sfamdata/PC_I11_ID2.RData")
+
 
 
 ### simulation perfect mom and noisy kids
@@ -21,7 +21,7 @@ sim <- SimSelfer(size.array=10, het.error=0.5, hom.error=0.02, numloci=40000, re
 
 ### format to phase_mom
 input <- sim2input(sim)
-probs <- get_error_mat(0.02, 0.5)[[2]]
+
 #estimated_mom <- input[[1]]
 progeny <- input[[2]]
 
@@ -30,19 +30,25 @@ progeny <- input[[2]]
 
 win_length=10
 verbose=TRUE
+probs <- get_error_mat(0.02, 0.5)[[2]]
 for(i in 1:10){
     chr <- subset(mk, chr==i)
     
-    progeny <- list(list())
+    progeny <- list()
     for(j in 6:ncol(chr)){
-        progeny[[i]][[1]] <- chr[, j]
-        progeny[[i]][[2]] <- chr[, j]
+        progeny[[j-5]] <- list()
+        progeny[[j-5]][[1]] <- chr[, j]
+        progeny[[j-5]][[2]] <- chr[, j]
     }
     
     newmom <- phasing(estimated_mom=chr[, 5], progeny, win_length, verbose=TRUE)
     #plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
 }
 
+
+hetsites <- which(chr[,5]==1)
+
+#phasing windown [34]
 #1: phasing(estimated_mom = chr[, 5], progeny, win_length, verbose = TRUE)
 #2: PhaseMom.R#9: phase_mom_chuck(estimated_mom, progeny, win_length, verbose, 
 #3: PhaseMom.R#111: jump_win(winstart, win_length, hetsites, mom_haps)

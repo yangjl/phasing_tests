@@ -64,7 +64,7 @@ phase_mom_chuck <- function(estimated_mom, progeny, win_length, verbose, mom_hap
     #for(winstart in 1:(length(hetsites)-(win_length-1)))
     winstart <- i <- 1
     while(winstart <= length(hetsites)-(win_length-1)){
-        if(verbose){ message(sprintf(">>> phasing window [ %s ] ...", winstart)) } 
+        if(verbose){ message(sprintf(">>> phasing window [ %s / %s ] ...", winstart, length(hetsites))) } 
         momwin <- hetsites[winstart:(winstart+win_length-1)]
         if(winstart==1){ 
             #arbitrarily assign win_hap to one chromosome initially
@@ -231,7 +231,7 @@ which_phase <- function(haplotype,kidwin){
             log( probs[[2]][three_genotypes[[geno]][zz]+1,kidwin[zz]+1])))
     }
     ### may introduce error
-    if(length(which(geno_probs==max(geno_probs)))!=1){recover()}
+    #if(length(which(geno_probs==max(geno_probs)))!=1){recover()}
     return(max(geno_probs))
 }
 

@@ -2,12 +2,12 @@
 title: "Notes"
 author: "Jinliang Yang"
 date: "July 23, 2015"
-output: html_document
+output: pdf_document
 ---
 
 # Infer mom's genotype by JRI
 
-We have obs. mom and obs. (selfed) kids.  We want to know $P(G|\theta)$, and $P(G|\theta) \propto P(\theta|G) \times (G)$, 
+We have obs. mom and obs. (selfed) kids.  We want to know $P(G|\theta)$, and $P(G|\theta) \propto P(\theta|G) \times P(G)$, 
 where $\theta$ is observed data.  This consists of observed genotypes ($G'$) of both mom and kids. So:
 $P(G|\theta)\propto \left( \prod\limits_{i=1}^{k}{P(G'_k|G)} \right) \times P(G'_{mom}|G) \times P(G)$
 This function is to impute mom's genotype from a progeny array of k kids at a single locus.
