@@ -1,20 +1,14 @@
 
 
-#KIDS GENOS
-inferred_progeny=list()
-mean.kid.geno.errors[mysim]=0;
-for(z in 1:length(progeny)){
-    inferred_progeny[[z]]=which_phase_kid(newmom,progeny[[z]][[2]][estimated_hets] )
-    mean.kid.geno.errors[mysim]=mean.kid.geno.errors[mysim]+(sum(abs(progeny[[z]][[1]][estimated_hets]-inferred_progeny[[z]])))/length(progeny)
-}
-mean.kid.geno.errors[mysim]=mean.kid.geno.errors[mysim]/numloci
+
 
 
 ##############################
-imputing <- function(momphase, progeny, win_length){
+imputing <- function(momphase, progeny, win_length, verbose){
     
     for(k in 1:length(progeny)){
         kid <- progeny[[k]][[2]]
+        kidgeno <- data.frame()
         for(c in unique(momphase$chunk)){
             mychunk <- subset(momphase, chunk == c)
             
@@ -23,23 +17,118 @@ imputing <- function(momphase, progeny, win_length){
             mychunk$k1 <- 3
             mychunk$k2 <- 3
             if(win_length >= nrow(mychunk)){
-                khaps <- which_phase_kid(haplotype, kidwin=kid[mychunk$idx])
+                idx <- mychunk$idx
+                haplotype <- mychunk$hap1
+                khaps <- which_phase_kid(haplotype, kidwin=kid[mychunk$idx[idx]])
+                mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
             }else{
-                for(win in 1:round(nrow(mychunk)/win_length,0) ){
+                for(win in 1:floor(nrow(mychunk)/win_length) ){
                     if(verbose){ message(sprintf(">>> imputing kid [ %s ]: block [ %s/%s ] window [ %s/%s ] ...", 
-                                                 k, c, length(unique(momphase$chunk)), win, nrow(mychunk))) } 
+                                                 k, c, length(unique(momphase$chunk)), win, floor(nrow(mychunk)/win_length) )) } 
                     
-                    myidx <- ((win-1)*win_length+1) : (win*win_length)
-                    khaps <- which_phase_kid(haplotype, kidwin=kid[myidx])
+                    idx <- ((win-1)*win_length+1) : (win*win_length)
+                    haplotype <- mychunk$hap1[idx]
+                    khaps <- which_phase_kid(haplotype, kidwin=kid[mychunk$idx[idx]])
+                    mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
                 }
                 ##### calculate last window
-                myidx <- (nrow(mychunk)-win_length+1) : nrow(mychunk)
-                khaps <- which_phase_kid(haplotype, kidwin=kid[myidx])
+                idx <- (nrow(mychunk)-win_length+1) : nrow(mychunk)
+                haplotype <- mychunk$hap1[idx]
+                khaps <- which_phase_kid(haplotype, kidwin=kid[mychunk$idx[idx]])
+                mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
+                
+                ##### find the min path of recombinations
+                mychunk <- minpath(mychunk, verbose=TRUE)
             }
-        }    
+            kidgeno <- rbind(kidgeno, mychunk)    
+        }
+        progeny[[k]][[3]] <- kidgeno
+    }
+    return(progeny)
+}
+
+
+
+minpath <- function(mychunk, verbose){
+    
+    mychunk$r1 <- 0
+    # compute the minimum distance to two haplotypes
+    mychunk[mychunk$k1!=3,]$r1 <- ifelse(mychunk[mychunk$k1!=3,]$k1 == mychunk[mychunk$k1!=3, ]$hap1, 1, 2)
+    mychunk$r2 <- 0
+    mychunk[mychunk$k2!=3,]$r2 <- ifelse(mychunk[mychunk$k2!=3,]$k2 == mychunk[mychunk$k2!=3, ]$hap1, 1, 2)
+    x1 <- factor(paste0(head(mychunk$r1,-1), tail(mychunk$r1,-1)), levels = c('11','12','21','22'))
+    tab1 <- table(x1)
+    x2 <- factor(paste0(head(mychunk$r2,-1), tail(mychunk$r2,-1)), levels = c('11','12','21','22'))
+    tab2 <- table(x2)
+    
+    #if(sum(tab1[2:3])>2 & sum(tab2[2:3])>2)
+    tx <- sum(tab1[2:3])+sum(tab2[2:3])
+    idxs <- sort(unique(c(which(x1=="12"), which(x1=="21"), which(x2=="12"), which(x2=="21"))))
+    
+    if(length(idxs) == 1 ){
+        myidx <- (idxs[i]+1):nrow(mychunk)
+        out <- compute_txn(mychunk, myidx, tx, verbose)
+        mychunk <- out[[1]]
+        tx <- out[[2]]
+    }else if(length(idxs) > 1){
+        for(i in 1:(length(idxs)-1)){
+            myidx <- (idxs[i]+1):idxs[i+1]
+            out <- compute_txn(mychunk, myidx, tx, verbose)
+            mychunk <- out[[1]]
+            tx <- out[[2]]
+        }
+        myidx <- (idxs[length(idxs)]+1):length(mychunk)
+        out <- compute_txn(mychunk, myidx, tx, verbose)
+        mychunk <- out[[1]]
+        tx <- out[[2]]
     }
     
+    return(mychunk)    
 }
+
+
+compute_txn <- function(mychunk, myidx, tx, verbose){
+    mychunk$t1 <- mychunk$r1
+    mychunk$t2 <- mychunk$r2
+    mychunk$t1[myidx] <- mychunk$r2[myidx]
+    mychunk$t2[myidx] <- mychunk$r1[myidx]
+    xt1 <- factor(paste0(head(mychunk$t1,-1), tail(mychunk$t1,-1)), levels = c('11','12','21','22'))
+    xtab1 <- table(xt1)
+    xt2 <- factor(paste0(head(mychunk$t2,-1), tail(mychunk$t2,-1)), levels = c('11','12','21','22'))
+    xtab2 <- table(xt2)
+    if(sum(xtab1[2:3])+sum(xtab2[2:3]) < tx){
+        mychunk$r1 <- mychunk$t1
+        mychunk$r2 <- mychunk$t2
+        tx2 <- sum(xtab1[2:3])+sum(xtab2[2:3])
+        if(verbose){message(sprintf("###>>> transition number reduced from [ %s ] to [ %s ]", tx, tx2))} 
+        tx <- tx2
+    }
+    return(list(mychunk[, -9:-10], tx))
+}
+
+
+
+
+copy_phase <- function(haplotype, mychunk, khaps, idx){
+    if(is.null(khaps)){
+        mychunk$k1[idx] <- 3
+        mychunk$k2[idx] <- 3
+    }else if(khaps == 1){
+        mychunk$k1[idx] <- haplotype
+        mychunk$k2[idx] <- haplotype
+    }else if(khaps == 2){
+        mychunk$k1[idx] <- haplotype
+        mychunk$k2[idx] <- 1-haplotype
+    }else if(khaps == 3){
+        mychunk$k1[idx] <- 1-haplotype
+        mychunk$k2[idx] <- 1-haplotype
+    }else{
+        stop("###!!! error! Unexpected haplotype value!")
+    }
+    return(mychunk)
+}
+
+
 
 
 ############################################################################
@@ -55,7 +144,7 @@ imputing <- function(momphase, progeny, win_length){
 #6     1  28    0    1
 which_phase_kid <- function(haplotype, kidwin){
     three_genotypes=list()
-    haplotype=unlist(haplotype)
+    #haplotype=unlist(haplotype)
     three_genotypes[[1]]=haplotype+haplotype
     three_genotypes[[2]]=haplotype+(1-haplotype)
     three_genotypes[[3]]=(1-haplotype)+(1-haplotype)
@@ -72,48 +161,3 @@ which_phase_kid <- function(haplotype, kidwin){
     }
 }
 
-
-
-### return the two haplotypes
-#myh1 <- replace(estimated_mom/2, hetsites, mom_phase1)
-#myh2 <- replace(estimated_mom/2, hetsites, 1-mom_phase1)
-#return(data.frame(h1=myh1, h2=myh2))
-#if(verbose){ message(sprintf(">>> phasing done!")) }
-#haplist[[i]] <- list(mom_phase1, mom_phase2, hetsites[idxstart:length(hetsites)])
-## list: hap1, hap2 and idx; info
-
-
-
-
-############################################################################
-### implement Viterbi algorithm for HMM
-viterbi <- function(){
-    emit <- c()
-    
-    init <- c(0.5, 0.5)
-    
-    
-    # backtracking algorithm
-    for (i in 2:length(symbol.sequence)) {
-        # probability vector stores the current emission with respect to (i-1) observation of selected state and transition probability
-        # state vector (pointer) on the other hand is only storing the most probable state in (i-1), which we will later use for backtracking
-        
-        
-        #l and k => two states
-        tmp.path.probability <- lapply(states, function(l) {
-            max.k <- unlist(lapply(states, function(k) {
-                prob.history[i-1, k] + transition.matrix[k, l]
-            }))
-            return(c(states[which(max.k == max(max.k))], max(max.k) + emission.matrix[symbol.sequence[i], l]))
-        })
-        
-        prob.history <- rbind(prob.history, data.frame(F = as.numeric(tmp.path.probability[[1]][2]), 
-                                                       L = as.numeric(tmp.path.probability[[2]][2])))
-        
-        state.history <- data.frame(F = c(as.character(state.history[,tmp.path.probability[[1]][1]]), "F"), 
-                                    L = c(as.character(state.history[,tmp.path.probability[[2]][1]]), "L"))
-    }
-    
-    # selecting the most probable path
-    viterbi.path <- as.character(state.history[,c("F", "L")[which(max(prob.history[length(symbol.sequence), ]) == prob.history[length(symbol.sequence), ])]])
-}
