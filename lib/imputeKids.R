@@ -9,11 +9,51 @@ for(z in 1:length(progeny)){
 }
 mean.kid.geno.errors[mysim]=mean.kid.geno.errors[mysim]/numloci
 
+
+##############################
+imputing <- function(momphase, progeny, win_length){
+    
+    for(k in 1:length(progeny)){
+        kid <- progeny[[k]][[2]]
+        for(c in unique(momphase$chunk)){
+            mychunk <- subset(momphase, chunk == c)
+            
+            #winstart <- i <- 1
+            ### kids haplotypes
+            mychunk$k1 <- 3
+            mychunk$k2 <- 3
+            if(win_length >= nrow(mychunk)){
+                khaps <- which_phase_kid(haplotype, kidwin=kid[mychunk$idx])
+            }else{
+                for(win in 1:round(nrow(mychunk)/win_length,0) ){
+                    if(verbose){ message(sprintf(">>> imputing kid [ %s ]: block [ %s/%s ] window [ %s/%s ] ...", 
+                                                 k, c, length(unique(momphase$chunk)), win, nrow(mychunk))) } 
+                    
+                    myidx <- ((win-1)*win_length+1) : (win*win_length)
+                    khaps <- which_phase_kid(haplotype, kidwin=kid[myidx])
+                }
+                ##### calculate last window
+                myidx <- (nrow(mychunk)-win_length+1) : nrow(mychunk)
+                khaps <- which_phase_kid(haplotype, kidwin=kid[myidx])
+            }
+        }    
+    }
+    
+}
+
+
 ############################################################################
 # Same as above, output kid's phase.
 # give this mom haplotype and a kid's diploid genotype over the window and returns maximum prob
-# Mendel is takenh care of in the probs[[]] matrix already 
-which_phase_kid <- function(haplotype,kidwin){
+# Mendel is takenh care of in the probs[[]] matrix already
+#  chunk idx hap1 hap2
+#1     1   2    1    0
+#2     1  19    1    0
+#3     1  20    0    1
+#4     1  21    0    1
+#5     1  24    1    0
+#6     1  28    0    1
+which_phase_kid <- function(haplotype, kidwin){
     three_genotypes=list()
     haplotype=unlist(haplotype)
     three_genotypes[[1]]=haplotype+haplotype
@@ -25,77 +65,21 @@ which_phase_kid <- function(haplotype,kidwin){
         #given the current phased geno and given mom is het. (which is why probs[[2]])
         geno_probs[geno]=sum( sapply(1:length(haplotype), function(zz) log( probs[[2]][three_genotypes[[geno]][zz]+1,kidwin[zz]+1])))
     }
-    if(length(which(geno_probs==max(geno_probs)))!=1){recover()}
-    return(three_genotypes[[which(geno_probs==max(geno_probs))]])
+    if(length(which(geno_probs==max(geno_probs)))==1){
+        return(which.max(geno_probs))
+    }else{
+        return(NULL)
+    }
 }
 
-#############################
-#for(winstart in 1:(length(hetsites)-(win_length-1)))
-winstart <- i <- 1
-while(winstart <= length(hetsites)-(win_length-1)){
-    if(verbose){ message(sprintf(">>> imputing window [ %s / %s ] ...", winstart, length(hetsites))) } 
-    kidwin <- hetsites[winstart:(winstart+win_length-1)]
-    if(winstart==1){ 
-        #arbitrarily assign win_hap to one chromosome initially
-        win_hap <- infer_dip(momwin,progeny,haps=mom_haps, returnhap=TRUE)
-        kid_phase1 <- win_hap[[1]]
-        kid_phase2 <- win_hap[[2]]
-        idxstart <- 1
-    } else{
-        win_hap <- infer_dip(momwin, progeny, haps=mom_haps, returnhap=FALSE)
-        ### comparing current hap with old hap except the last bp -JLY
-        if(!is.null(win_hap)){
-            
-            same=sum(mom_phase1[(length(mom_phase1)-win_length+2):length(mom_phase1)]==win_hap[1:length(win_hap)-1])
-            
-            if(same == 0){ #totally opposite phase of last window
-                mom_phase2[length(mom_phase2)+1] <- win_hap[length(win_hap)]
-                mom_phase1[length(mom_phase1)+1] <- 1-win_hap[length(win_hap)]
-            } else if(same==(win_length-1) ){ #same phase as last window
-                mom_phase1[length(mom_phase1)+1] <- win_hap[length(win_hap)]
-                mom_phase2[length(mom_phase2)+1] <- 1-win_hap[length(win_hap)]
-            } else{
-                diff1 <- sum(abs(mom_phase1[(length(mom_phase1)-win_length+2):length(mom_phase1)]-win_hap[1:length(win_hap)-1]))
-                diff2 <- sum(abs(mom_phase2[(length(mom_phase1)-win_length+2):length(mom_phase1)]-win_hap[1:length(win_hap)-1]))
-                if(diff1 > diff2){ #momphase1 is less similar to current inferred hap
-                    mom_phase2[length(mom_phase2)+1] <- win_hap[length(win_hap)]
-                    mom_phase1[length(mom_phase1)+1] <- 1-win_hap[length(win_hap)]
-                } else{ #momphase1 is more similar
-                    mom_phase1[length(mom_phase1)+1] <- win_hap[length(win_hap)]
-                    mom_phase2[length(mom_phase2)+1] <- 1-win_hap[length(win_hap)]
-                }
-            }
-        } else {
-            ### potential recombination in kids, output previous haps and jump to next non-overlap window -JLY###
-            idxend <- winstart + win_length -2
-            haplist[[i]] <- list(mom_phase1, mom_phase2, hetsites[idxstart:idxend])
-            i <- i +1
-            
-            ### warning(paste("Likely recombination at position", winstart+1, sep=" "))
-            ### if new window is still ambiguous, add 1bp and keep running until find the best hap
-            winstart <- winstart + win_length -2
-            while(is.null(win_hap)){
-                
-                winstart <- winstart + 1
-                win_hap <- jump_win(winstart, win_length, hetsites, mom_haps)
-                if(is.null(win_hap)){
-                    nophase <- c(nophase, hetsites[winstart])
-                }
-            }
-            idxstart <- winstart
-            mom_phase1 <- win_hap
-            mom_phase2 <- 1-win_hap
-        }
-    }
-    winstart <- winstart + 1
-}
+
 
 ### return the two haplotypes
 #myh1 <- replace(estimated_mom/2, hetsites, mom_phase1)
 #myh2 <- replace(estimated_mom/2, hetsites, 1-mom_phase1)
 #return(data.frame(h1=myh1, h2=myh2))
 #if(verbose){ message(sprintf(">>> phasing done!")) }
-haplist[[i]] <- list(mom_phase1, mom_phase2, hetsites[idxstart:length(hetsites)])
+#haplist[[i]] <- list(mom_phase1, mom_phase2, hetsites[idxstart:length(hetsites)])
 ## list: hap1, hap2 and idx; info
 
 
