@@ -6,5 +6,5 @@
 #SBATCH --array=1-100
 
 #only argument is mean (of poisson) of number of crossovers
-crossovers=$1
+#crossovers=$1
 R --no-save "--args $SLURM_JOB_ID" < profiling/1.test_codes/1.A.2_test_phase_mom.R

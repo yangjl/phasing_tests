@@ -2,7 +2,7 @@
 ### July 30th, 2015
 
 
-files <- list.files(path="test", pattern="txt$")
+files <- list.files(path="slurm", pattern="txt$")
 
 err <- data.frame()
 for(i in 1:length(files)){

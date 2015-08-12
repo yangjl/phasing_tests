@@ -6,53 +6,80 @@
 phasing <- function(estimated_mom, progeny, win_length, verbose=FALSE){
     
     mom_haps <- setup_haps(win_length) 
+    if(verbose){ message(sprintf(">>> start to phase hap chunks ...")) }
     haplist <- phase_mom_chuck(estimated_mom, progeny, win_length, verbose, mom_haps)
+    
     if(verbose){ message(sprintf(">>> start to join hap chunks ...")) } 
-    outhaplist <- list(list())
     if(length(haplist) > 1){
-        outhaplist[[1]] <- haplist[[1]] ### store the extended haps: hap1, hap2 and idx
-        hap1 <- haplist[[1]][[1]]
-        hap2 <- haplist[[1]][[2]]
-        idx <- haplist[[1]][[3]]
-        i <- 1
-        for(chunki in 2:length(haplist)){
-            if(verbose){ message(sprintf(">>> join chunks [ %s and %s / %s] ...", chunki-1, chunki, length(haplist))) }
-            # join two neighbor haplotype chunks
-            oldchunk <- haplist[[chunki-1]]
-            newchunk <- haplist[[chunki]]
-            hapidx <- c(oldchunk[[3]], newchunk[[3]])
-            haps <- list(c(oldchunk[[1]], newchunk[[1]]), c(oldchunk[[1]], newchunk[[2]]))
-            temhap <- link_haps(momwin=hapidx, progeny, haps, returnhap=FALSE)
-            if(!is.null(temhap)){
-                
-                same <- sum(hap1[(length(hap1)-length(oldchunk[[1]])+1):length(hap1)] == temhap[1:length(oldchunk[[1]])])
-                #same <- sum(mom_phase1[(length(mom_phase1)-8):length(mom_phase1)] == win_hap[1:length(win_hap)-1])
-                idx <- c(idx, newchunk[[3]])
-                if(same == 0){ #totally opposite phase of last window
-                    #hap2[length(mom_phase2)+1] <- win_hap[length(win_hap)]
-                    hap2 <- c(hap2, temhap[(length(oldchunk[[1]])+1):length(temhap)])
-                    hap1 <- 1 - hap2
-                   
-                } else if(same== length(oldchunk[[1]]) ){ #same phase as last window
-                    #mom_phase1[length(mom_phase1)+1] <- win_hap[length(win_hap)]
-                    hap1 <- c(hap1, temhap[(length(oldchunk[[1]])+1):length(temhap)])
-                    hap2 <- 1 - hap1
-                } else{
-                    stop(">>> Extending error !!!")
-                }
-            } else {
-                i <- i +1
-                outhaplist[[i]] <- haplist[[chunki]]
-            } 
-        }
-        outhaplist[[1]] <- list(hap1, hap2, idx)
-        return(outhaplist)
+        out <- joint_mom_chunk(haplist, verbose)
+        if(verbose){ message(sprintf(">>> Reduced chunks from [ %s ] to [ %s ]", length(haplist), length(out))) } 
+        return(out)
     }
     else{
         return(haplist)
     }
 }
-
+##########################################
+joint_mom_chunk <- function(haplist, verbose){
+    outhaplist <- list(list())
+    outhaplist[[1]] <- haplist[[1]] ### store the extended haps: hap1, hap2 and idx
+    i <- 1
+    for(chunki in 2:length(haplist)){
+        if(verbose){ message(sprintf(">>> join chunks [ %s and %s, total:%s] ...", chunki-1, chunki, length(haplist))) }
+        # join two neighbor haplotype chunks
+        oldchunk <- haplist[[chunki-1]]
+        newchunk <- haplist[[chunki]]
+        hapidx <- c(oldchunk[[3]], newchunk[[3]])
+        haps <- list(c(oldchunk[[1]], newchunk[[1]]), c(oldchunk[[1]], newchunk[[2]]))
+        temhap <- link_haps(momwin=hapidx, progeny, haps, returnhap=FALSE)
+        if(!is.null(temhap)){
+            outold <- outhaplist[[i]][[1]]
+            outoldchunk <- outold[ (length(outold)-length(oldchunk[[1]])+1):length(outold)]
+            outnewchunk <- temhap[(length(oldchunk[[1]])+1):length(temhap)]
+            
+            same <- sum(outoldchunk == temhap[1:length(oldchunk[[1]])])
+            #same <- sum(mom_phase1[(length(mom_phase1)-8):length(mom_phase1)] == win_hap[1:length(win_hap)-1])
+            outhaplist[[i]][[3]] <- c(outhaplist[[i]][[3]], newchunk[[3]])
+            if(same == 0){ #totally opposite phase of last window
+                #hap2[length(mom_phase2)+1] <- win_hap[length(win_hap)]
+                                
+                outhaplist[[i]][[1]] <- c(outhaplist[[i]][[1]], 1-outnewchunk)
+                outhaplist[[i]][[2]] <- c(outhaplist[[i]][[2]], outnewchunk)
+                
+            } else if(same== length(oldchunk[[1]]) ){ #same phase as last window
+                #mom_phase1[length(mom_phase1)+1] <- win_hap[length(win_hap)]
+                
+                outhaplist[[i]][[1]] <- c(outhaplist[[i]][[1]], outnewchunk)
+                outhaplist[[i]][[2]] <- c(outhaplist[[i]][[2]], 1-outnewchunk)
+            } else{
+                stop(">>> Extending error !!!")
+            }
+        } else {
+            i <- i +1
+            outhaplist[[i]] <- haplist[[chunki]]
+        } 
+    }
+    return(outhaplist)
+}
+############################################################################
+link_haps <- function(momwin, progeny, haps, returnhap=FALSE){  
+    # momwin is list of heterozygous sites, progeny list of kids genotypes, 
+    # haps list of possible haps,momphase1 is current phased mom for use in splitting ties
+    #### function for running one hap ####
+    runoverhaps <- function(myhap){
+        #iterate over possible haplotypes <- this is slower because setup_haps makes too many haps
+        #get max. prob for each kid, sum over kids
+        return(sum( sapply(1:length(progeny), function(z) 
+            which_phase(haps[myhap], progeny[[z]][[2]][momwin] ))))
+    }
+    phase_probs <- sapply(1:(length(haps)), function(a) runoverhaps(a) )
+    #if multiple haps tie, return two un-phased haps
+    if(length(which(phase_probs==max(phase_probs)))>1){
+        return(NULL)
+    } else {
+        return(haps[[which.max(phase_probs)]])
+    }
+}
 ##########################################
 phase_mom_chuck <- function(estimated_mom, progeny, win_length, verbose, mom_haps){
     hetsites <- which(estimated_mom==1)
@@ -63,8 +90,12 @@ phase_mom_chuck <- function(estimated_mom, progeny, win_length, verbose, mom_hap
     haplist <- list()
     #for(winstart in 1:(length(hetsites)-(win_length-1)))
     winstart <- i <- 1
+    
+    
+    ###### print progress bar
+    pb <- txtProgressBar(min = winstart, max = length(hetsites)-(win_length-1), style = 3)
     while(winstart <= length(hetsites)-(win_length-1)){
-        if(verbose){ message(sprintf(">>> phasing window [ %s / %s ] ...", winstart, length(hetsites))) } 
+        if(verbose){ setTxtProgressBar(pb, winstart) } 
         momwin <- hetsites[winstart:(winstart+win_length-1)]
         if(winstart==1){ 
             #arbitrarily assign win_hap to one chromosome initially
@@ -120,7 +151,7 @@ phase_mom_chuck <- function(estimated_mom, progeny, win_length, verbose, mom_hap
         }
         winstart <- winstart + 1
     }
-    
+    close(pb)
     ### return the two haplotypes
     #myh1 <- replace(estimated_mom/2, hetsites, mom_phase1)
     #myh2 <- replace(estimated_mom/2, hetsites, 1-mom_phase1)
@@ -131,25 +162,7 @@ phase_mom_chuck <- function(estimated_mom, progeny, win_length, verbose, mom_hap
     return(haplist)
     #return(list(haplist=haplist, info=list(het=hetsites, nophase=nophase)))
 }
-############################################################################
-link_haps <- function(momwin, progeny, haps, returnhap=FALSE){  
-    # momwin is list of heterozygous sites, progeny list of kids genotypes, 
-    # haps list of possible haps,momphase1 is current phased mom for use in splitting ties
-    #### function for running one hap ####
-    runoverhaps <- function(myhap){
-        #iterate over possible haplotypes <- this is slower because setup_haps makes too many haps
-        #get max. prob for each kid, sum over kids
-        return(sum( sapply(1:length(progeny), function(z) 
-            which_phase(haps[myhap],progeny[[z]][[2]][momwin] ))))
-    }
-    phase_probs <- sapply(1:(length(haps)), function(a) runoverhaps(a) )
-    #if multiple haps tie, return two un-phased haps
-    if(length(which(phase_probs==max(phase_probs)))>1){
-        return()
-    } else {
-        return(haps[[which(phase_probs==max(phase_probs))]])
-    }
-}
+
 
 
 ############################################################################
@@ -207,8 +220,10 @@ infer_dip <- function(momwin, progeny, haps, returnhap=FALSE){
         } else{
             return(NULL)
         }
-    } else {
-        return(haps[[which(phase_probs==max(phase_probs))]])
+    } else if(length(which(phase_probs==max(phase_probs)))==1) {
+        return(haps[[which.max(phase_probs)]])
+    } else{
+        return(NULL)
     }
 }
 ############################################################################
@@ -266,3 +281,14 @@ write_mom <- function(newmom){
     return(momdf)
 }
 
+print_progress <- function(){
+    total <- 20
+    # create progress bar
+    pb <- txtProgressBar(min = 0, max = total, style = 3)
+    for(i in 1:total){
+        Sys.sleep(0.1)
+        # update progress bar
+        setTxtProgressBar(pb, i)
+    }
+    close(pb)
+}
