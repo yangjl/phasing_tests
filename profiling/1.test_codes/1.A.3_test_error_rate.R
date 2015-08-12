@@ -11,6 +11,6 @@ for(i in 1:length(files)){
     out <- rbind(out, tem)
 }
 
-err$er <- err$err/err$tot
+out$er <- out$err/out$loci
 
 
