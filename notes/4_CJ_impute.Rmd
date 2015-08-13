@@ -15,9 +15,37 @@ inferred_mom=1 -> 00, 2->01, 3->11
 
 
 ----------
-- H: heterozygote sites of a given window size (10, 20) and stepping size 1 SNP.
 
+# Imputing Founder Genotypes  
+$P(G|\theta) \propto P(\theta|G) \times P(G)$   
+$$P(G|\theta)\propto \left( \prod\limits_{i=1}^{k}{P(G'_i|G)} \right) \times \left( \sum_{n=1}^{mom} P(G'_{mom}|G) \right) \times P(G)$$  
+
+----------
+
+This function is to impute mom's genotype by finding the maximum likelihood of $P(G|\theta)$ from a progeny array of k kids at a single locus.
+- Where $\theta$ denotes observed data. It consists of observed genotypes ($G'$) of both mom and kids.  
+- $P(G)$ is the Hardy-Weinberg equilibrium estimated from the population.  
+- $P(G'_{mom}|G)$ is the error matrix estimated from the data, i.e. homozygote error = 0.02 and heterozygote error =0.6.  
+- $P(G'_i|G)$ is the error matrix times Mendelian segregation rate.  
+
+
+----------
+
+# Phasing Founder Genotypes  
 $P(H|\theta) \propto P(\theta|H) \times P(H)$   
-$P(H|\theta) \propto \left( \prod\limits_{i=1}^{k}{P(H'_k|H)} \right) \times P(H'_{mom}|H) \times P(H)$
+$P(H|\theta) \propto \left( \prod\limits_{i=1}^{k}{P(H'_k|H)} \right) \times P(H)$  
+$P(H|\theta) \propto \left( \prod\limits_{i=1}^{k}\prod\limits_{l=1}^{n}{P(G'_{i,l}|H)} \right) \times P(H)$
+
+- Where $\theta$ denotes observed data.
+- $P(H)$ is the probability of the haplotype for a given window size of $n$.
+- $P(G'_{i,l}|H)$ is the probability of kid $i$ at locus $l$ for a given haplotype $H$.
+- We assume all the possible haplotypes of a given window size are equally likely.
 
 
+```{r}
+phase <- read.csv("../data/sim_phasing_res.csv")
+
+hist(phase$er, breaks=30, main="Simulation (N=100)",col="#faebd7", xlab="Phasing Error Rate")
+abline(v=mean(phase$er), col="red", lwd=2)
+abline(v=median(phase$er), col="darkblue", lwd=2)
+```

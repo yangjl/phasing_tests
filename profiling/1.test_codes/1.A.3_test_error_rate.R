@@ -13,4 +13,4 @@ for(i in 1:length(files)){
 
 out$er <- out$err/out$loci
 
-
+write.table(out, "data/sim_phasing_res.csv", sep=",", row.names=FALSE, quote=FALSE)
