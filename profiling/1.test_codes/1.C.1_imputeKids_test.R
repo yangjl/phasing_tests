@@ -32,6 +32,15 @@ save(file="largedata/lcached.RData", list=c("out", "progeny", "sim"))
 hetsites <- which(input[[1]]==1)
 
 #########################################################################################################
-p <- imputing(out, progeny, 10, verbose)
+ob <- load("largedata/lcached.RData")
+simk <- get_sim_kids(sim)
+p <- imputing(out, progeny, 30, verbose)
+
+
+
+out10 <- comp_kids(simk, imputek=p)
+
+#[1] 0.06037394
+
 
 

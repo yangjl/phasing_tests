@@ -34,7 +34,7 @@ imputing <- function(momphase, progeny, win_length, verbose){
                 mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
                 
                 ##### find the min path of recombinations
-                mychunk <- minpath(mychunk, verbose=TRUE)
+                mychunk <- minpath(mychunk, verbose)
             }
             kidgeno <- rbind(kidgeno, mychunk)    
         }
@@ -62,7 +62,7 @@ minpath <- function(mychunk, verbose){
     idxs <- sort(unique(c(which(x1=="12"), which(x1=="21"), which(x2=="12"), which(x2=="21"))))
     
     if(length(idxs) == 1 ){
-        myidx <- (idxs[i]+1):nrow(mychunk)
+        myidx <- (idxs[1]+1):nrow(mychunk)
         out <- compute_txn(mychunk, myidx, tx, verbose)
         mychunk <- out[[1]]
         tx <- out[[2]]

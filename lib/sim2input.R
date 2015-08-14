@@ -1,3 +1,5 @@
+### methods for the sim object
+
 ### format SimSelfer object to JRI's code
 sim2input <- function(sim){
     simp <- sim[[1]] # mom
@@ -8,7 +10,8 @@ sim2input <- function(sim){
         progeny[[i]] <- list(simk[[i]][[2]]$hap1+simk[[i]][[2]]$hap2, simk[[i]][[2]]$obs)
     }
     #p <- frq(progeny)
-    return(list(simp$obs, progeny))
+    ### use the perfect parental genotype
+    return(list(simp$geno, progeny))
 }
 
 frq <- function(progeny){
@@ -20,3 +23,12 @@ frq <- function(progeny){
     res <- replace(res, which(res==0), 0.5/length(progeny))
     return(res)
 }
+
+get_sim_kids <- function(sim){
+    simk <- sim[[2]]
+    progeny <- list()
+    for(i in 1:length(simk)){
+        progeny[[i]] <- simk[[i]][[2]]
+    }
+    return(progeny)
+} 
