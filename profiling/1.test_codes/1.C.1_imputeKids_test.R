@@ -11,7 +11,7 @@ f <- sapply(list.files(pattern="[.]R$", path="lib", full.names=TRUE), source)
 
 ### simulation perfect mom and noisy kids
 #set.seed(1235678*i)
-sim <- SimSelfer(size.array=10, het.error=0.5, hom.error=0.02, numloci=10000, rec=1.5, imiss=0.3)
+sim <- SimSelfer(size.array=10, het.error=0.5, hom.error=0.02, numloci=40000, rec=1.5, imiss=0.3)
 #plotselfer(sim, kids=6:10, snps=40:100, cols=c("green", "blue"))
 ### format to phase_mom
 input <- sim2input(sim)
@@ -33,14 +33,16 @@ hetsites <- which(input[[1]]==1)
 
 #########################################################################################################
 ob <- load("largedata/lcached.RData")
+
+ob <- load("largedata/out/5097603_sim.RData")
 simk <- get_sim_kids(sim)
-p <- imputing(out, progeny, 30, verbose)
+p <- imputing(out, progeny, 15, verbose)
 
 
 
 out10 <- comp_kids(simk, imputek=p)
 
 #[1] 0.06037394
-
+###>>> Average error rate [ 0.0531363088057901 ]
 
 

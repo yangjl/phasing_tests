@@ -5,6 +5,10 @@ imputing <- function(momphase, progeny, win_length, verbose){
     for(k in 1:length(progeny)){
         kid <- progeny[[k]][[2]]
         kidgeno <- data.frame()
+        
+        if(verbose){ message(sprintf(">>> imputing kid [ %s ]: block [ %s/%s ] window [ %s/%s ] ...", 
+                                     k, c, length(unique(momphase$chunk)), win, floor(nrow(mychunk)/win_length) )) } 
+        
         for(c in unique(momphase$chunk)){
             mychunk <- subset(momphase, chunk == c)
             
@@ -19,8 +23,6 @@ imputing <- function(momphase, progeny, win_length, verbose){
                 mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
             }else{
                 for(win in 1:floor(nrow(mychunk)/win_length) ){
-                    if(verbose){ message(sprintf(">>> imputing kid [ %s ]: block [ %s/%s ] window [ %s/%s ] ...", 
-                                                 k, c, length(unique(momphase$chunk)), win, floor(nrow(mychunk)/win_length) )) } 
                     
                     idx <- ((win-1)*win_length+1) : (win*win_length)
                     haplotype <- mychunk$hap1[idx]
@@ -43,6 +45,38 @@ imputing <- function(momphase, progeny, win_length, verbose){
     return(progeny)
 }
 
+######################################################
+refine_brk_point <- function(mychunk, win_length){
+    x1 <- factor(paste0(head(mychunk$r1,-1), tail(mychunk$r1,-1)), levels = c('11','12','21','22'))
+    tab1 <- table(x1)
+    x2 <- factor(paste0(head(mychunk$r2,-1), tail(mychunk$r2,-1)), levels = c('11','12','21','22'))
+    tab2 <- table(x2)
+    
+    #if(sum(tab1[2:3])>2 & sum(tab2[2:3])>2)
+    tx <- sum(tab1[2:3])+sum(tab2[2:3])
+    idx1 <- sort(c(which(x1=="12"), which(x1=="21")))
+    idx2 <- sort(c(which(x2=="12"), which(x2=="21")))
+    
+    if(length(idx1) > 0){
+        for(i in idx1){
+            if(i <= win_length){
+                starti <- 1
+            }else{
+                starti <- idx1-win_length
+            }
+            if((i+win_length+1) >= nrow(mychunk)){
+                endi <- nrow(mychunk)
+            }else{
+                endi <- idx1 + win_length+1
+            }
+        }
+    }
+    
+    , which(x2=="12"), which(x2=="21"))))
+}
+
+
+
 
 
 minpath <- function(mychunk, verbose){
@@ -63,18 +97,18 @@ minpath <- function(mychunk, verbose){
     
     if(length(idxs) == 1 ){
         myidx <- (idxs[1]+1):nrow(mychunk)
-        out <- compute_txn(mychunk, myidx, tx, verbose)
+        out <- compute_transition(mychunk, myidx, tx, verbose)
         mychunk <- out[[1]]
         tx <- out[[2]]
     }else if(length(idxs) > 1){
         for(i in 1:(length(idxs)-1)){
             myidx <- (idxs[i]+1):idxs[i+1]
-            out <- compute_txn(mychunk, myidx, tx, verbose)
+            out <- compute_transition(mychunk, myidx, tx, verbose)
             mychunk <- out[[1]]
             tx <- out[[2]]
         }
         myidx <- (idxs[length(idxs)]+1):length(mychunk)
-        out <- compute_txn(mychunk, myidx, tx, verbose)
+        out <- compute_transition(mychunk, myidx, tx, verbose)
         mychunk <- out[[1]]
         tx <- out[[2]]
     }
@@ -83,7 +117,7 @@ minpath <- function(mychunk, verbose){
 }
 
 
-compute_txn <- function(mychunk, myidx, tx, verbose){
+compute_transition <- function(mychunk, myidx, tx, verbose){
     mychunk$t1 <- mychunk$r1
     mychunk$t2 <- mychunk$r2
     mychunk$t1[myidx] <- mychunk$r2[myidx]
@@ -96,7 +130,6 @@ compute_txn <- function(mychunk, myidx, tx, verbose){
         mychunk$r1 <- mychunk$t1
         mychunk$r2 <- mychunk$t2
         tx2 <- sum(xtab1[2:3])+sum(xtab2[2:3])
-        if(verbose){message(sprintf("###>>> transition number reduced from [ %s ] to [ %s ]", tx, tx2))} 
         tx <- tx2
     }
     return(list(mychunk[, -9:-10], tx))
