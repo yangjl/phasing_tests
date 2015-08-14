@@ -28,8 +28,10 @@ newmom <- phasing(estimated_mom=input[[1]], progeny, win_length, verbose=TRUE)
 
 out <- write_mom(newmom)
 
+save(file="largedata/lcached.RData", list=c("out", "progeny", "sim"))
 hetsites <- which(input[[1]]==1)
 
-p <- imputing(out, progeny, 5, verbose)
+#########################################################################################################
+p <- imputing(out, progeny, 10, verbose)
 
 

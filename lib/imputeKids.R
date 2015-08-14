@@ -1,8 +1,4 @@
 
-
-
-
-
 ##############################
 imputing <- function(momphase, progeny, win_length, verbose){
     
@@ -19,7 +15,7 @@ imputing <- function(momphase, progeny, win_length, verbose){
             if(win_length >= nrow(mychunk)){
                 idx <- mychunk$idx
                 haplotype <- mychunk$hap1
-                khaps <- which_phase_kid(haplotype, kidwin=kid[mychunk$idx[idx]])
+                khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[idx]])
                 mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
             }else{
                 for(win in 1:floor(nrow(mychunk)/win_length) ){
@@ -28,13 +24,13 @@ imputing <- function(momphase, progeny, win_length, verbose){
                     
                     idx <- ((win-1)*win_length+1) : (win*win_length)
                     haplotype <- mychunk$hap1[idx]
-                    khaps <- which_phase_kid(haplotype, kidwin=kid[mychunk$idx[idx]])
+                    khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[idx]])
                     mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
                 }
                 ##### calculate last window
                 idx <- (nrow(mychunk)-win_length+1) : nrow(mychunk)
                 haplotype <- mychunk$hap1[idx]
-                khaps <- which_phase_kid(haplotype, kidwin=kid[mychunk$idx[idx]])
+                khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[idx]])
                 mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
                 
                 ##### find the min path of recombinations
@@ -142,7 +138,7 @@ copy_phase <- function(haplotype, mychunk, khaps, idx){
 #4     1  21    0    1
 #5     1  24    1    0
 #6     1  28    0    1
-which_phase_kid <- function(haplotype, kidwin){
+which_kid_hap <- function(haplotype, kidwin){
     three_genotypes=list()
     #haplotype=unlist(haplotype)
     three_genotypes[[1]]=haplotype+haplotype
