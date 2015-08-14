@@ -34,8 +34,8 @@ hetsites <- which(input[[1]]==1)
 #########################################################################################################
 ob <- load("largedata/lcached.RData")
 
-ob <- load("largedata/out/5097603_sim.RData")
-simk <- get_sim_kids(sim)
+#ob <- load("largedata/out/5097603_sim.RData")
+#simk <- get_sim_kids(sim)
 p <- imputing(out, progeny, 15, verbose)
 
 

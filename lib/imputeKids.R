@@ -57,24 +57,29 @@ refine_brk_point <- function(mychunk, win_length){
     idx1 <- sort(c(which(x1=="12"), which(x1=="21")))
     idx2 <- sort(c(which(x2=="12"), which(x2=="21")))
     
-    if(length(idx1) > 0){
-        for(i in idx1){
+    
+    
+    
+}
+
+
+move_bp <- function(mychunk, idx){
+    if(length(idx) > 0){
+        for(i in idx){
             if(i <= win_length){
                 starti <- 1
             }else{
-                starti <- idx1-win_length
+                starti <- idx-win_length
             }
-            if((i+win_length+1) >= nrow(mychunk)){
+            if((i+win_length) >= nrow(mychunk)){
                 endi <- nrow(mychunk)
             }else{
-                endi <- idx1 + win_length+1
+                endi <- idx + win_length
             }
+            
         }
     }
-    
-    , which(x2=="12"), which(x2=="21"))))
 }
-
 
 
 
