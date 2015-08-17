@@ -1,9 +1,10 @@
 ### Jinliang Yang
 ### August 7th, 2015
 
-
-### write PLINK format file
-#FormatData(wgs, cols=9:27)
+options(echo=TRUE) # if you want see commands in output file
+args <- commandArgs(trailingOnly = TRUE)
+#crossovers=as.numeric(args[1]) # mean expected crossovers per chromosome; 0 = no recombination
+job=args[1]
 
 
 ### loading all the functions in folder "lib"
@@ -26,21 +27,17 @@ probs <- get_error_mat(0.02, 0.8)[[2]]
 newmom <- phasing(estimated_mom=input[[1]], progeny, win_length, verbose=TRUE)
 #plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
 
-out <- write_mom(newmom)
-
-
-#########################################################################################################
+pm <- write_mom(newmom)
 
 #ob <- load("largedata/lcached.RData")
 #simk <- get_sim_kids(sim)
-imputek <- imputing(out, progeny, 15, verbose)
+imputek <- imputing(momphase=pm, progeny, 15, verbose)
 
-save(file=paste0("largedata/out/", job, "_imputekid.RData"), list=c("out", "progeny", "sim", "imputek"))
+save(file=paste0("largedata/out/", job, "_imputekid.RData"), list=c("sim","pm", "imputek"))
 
-simk <- progeny
-out10 <- comp_kids(simk=sim[[2]], imputek)
+#simk <- progeny
+#out10 <- comp_kids(simk=sim[[2]], imputek)
 
 #[1] 0.06037394
 ###>>> Average error rate [ 0.0531363088057901 ]
-
 ###>>> Average error rate [ 0.0399276236429433 ]
