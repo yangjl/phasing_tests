@@ -6,38 +6,18 @@ imputing <- function(momphase, progeny, win_length, verbose){
         kid <- progeny[[k]][[2]]
         kidgeno <- data.frame()
         
-        if(verbose){ message(sprintf(">>> imputing kid [ %s ]: block [ %s/%s ] window [ %s/%s ] ...", 
-                                     k, c, length(unique(momphase$chunk)), win, floor(nrow(mychunk)/win_length) )) } 
-        
         for(c in unique(momphase$chunk)){
-            mychunk <- subset(momphase, chunk == c)
+            ### find the best haps in a chunk
+            if(verbose){ message(sprintf(">>> imputing kid [ %s ]: chunk [ %s/%s ] of windows [ %s ] ...", 
+                                         k, c, length(unique(momphase$chunk)), floor(nrow(mychunk)/win_length) )) } 
+            mychunk <- hap_in_chunk(momphase, c, win_length, kid)
             
-            #winstart <- i <- 1
-            ### kids haplotypes
-            mychunk$k1 <- 3
-            mychunk$k2 <- 3
-            if(win_length >= nrow(mychunk)){
-                idx <- mychunk$idx
-                haplotype <- mychunk$hap1
-                khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[idx]])
-                mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
-            }else{
-                for(win in 1:floor(nrow(mychunk)/win_length) ){
-                    
-                    idx <- ((win-1)*win_length+1) : (win*win_length)
-                    haplotype <- mychunk$hap1[idx]
-                    khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[idx]])
-                    mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
-                }
-                ##### calculate last window
-                idx <- (nrow(mychunk)-win_length+1) : nrow(mychunk)
-                haplotype <- mychunk$hap1[idx]
-                khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[idx]])
-                mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
-                
-                ##### find the min path of recombinations
-                mychunk <- minpath(mychunk, verbose)
-            }
+            #### find the min path of recombinations: it is already minimum path not necessary to run the following
+            #mychunk <- min_path(mychunk, verbose)
+            
+            ### refine break point
+            mychunk <- refine_brk_point(mychunk, win_length, verbose, kid)
+            
             kidgeno <- rbind(kidgeno, mychunk)    
         }
         progeny[[k]][[3]] <- kidgeno
@@ -46,7 +26,30 @@ imputing <- function(momphase, progeny, win_length, verbose){
 }
 
 ######################################################
-refine_brk_point <- function(mychunk, win_length){
+refine_brk_point <- function(mychunk, win_length, verbose, kid){
+    
+    bpoints <- get_break_point(mychunk)
+    if(verbose){ message(sprintf("###>>> observed number of break points [ %s ] and [ %s ]", 
+                                 length(bpoints[[1]]), length(bpoints[[2]]) )) } 
+    
+    #kidwin <- kid[mychunk$idx]
+    mychunk <- move_bp(mychunk, whichhap=1, idx=bpoints[[1]], win_length, kid)
+    mychunk <- move_bp(mychunk, whichhap=2, idx=bpoints[[2]], win_length, kid)
+    
+    bpoints <- get_break_point(mychunk)
+    if(verbose){ message(sprintf("###>>> After refining: break points [ %s ] and [ %s ]", 
+                                 length(bpoints[[1]]), length(bpoints[[2]]) )) } 
+    
+    return(mychunk)
+}
+
+get_break_point <- function(mychunk){
+    mychunk$r1 <- 0
+    # compute the minimum distance to two haplotypes
+    mychunk[mychunk$k1!=3,]$r1 <- ifelse(mychunk[mychunk$k1!=3,]$k1 == mychunk[mychunk$k1!=3, ]$hap1, 1, 2)
+    mychunk$r2 <- 0
+    mychunk[mychunk$k2!=3,]$r2 <- ifelse(mychunk[mychunk$k2!=3,]$k2 == mychunk[mychunk$k2!=3, ]$hap1, 1, 2)
+    
     x1 <- factor(paste0(head(mychunk$r1,-1), tail(mychunk$r1,-1)), levels = c('11','12','21','22'))
     tab1 <- table(x1)
     x2 <- factor(paste0(head(mychunk$r2,-1), tail(mychunk$r2,-1)), levels = c('11','12','21','22'))
@@ -57,34 +60,63 @@ refine_brk_point <- function(mychunk, win_length){
     idx1 <- sort(c(which(x1=="12"), which(x1=="21")))
     idx2 <- sort(c(which(x2=="12"), which(x2=="21")))
     
-    
-    
-    
+    return(list(idx1, idx2))
+}
+
+move_bp <- function(mychunk, whichhap, idx, win_length, kid){
+    idx <- c(0, idx, nrow(mychunk))
+    if(length(idx) > 2){
+        for(i in 2:(length(idx)-1)){
+            
+            ### start and end of the new window
+            if((idx[i] - idx[i-1]) > win_length){
+                starti <- idx[i] - win_length
+            }else{
+                starti <- idx[i-1]+1  
+            }
+            if((idx[i+1] - idx[i]) >= win_length){
+                endi <- idx[i] + win_length
+            }else{
+                endi <- idx[i+1]
+            }
+            
+            ########################################
+            haps <- c(mychunk[starti:idx[i], 4+whichhap], 1-mychunk[(idx[i]+1):endi, 4+whichhap])
+            hap0 <- lapply(1:(length(haps)-1), function(i) c(haps[1:i], 1-haps[(i+1):length(haps)]))
+            hap0[[length(hap0)+1]] <- haps
+            hap0[[length(hap0)+1]] <- 1-haps
+            fixhap <- mychunk[starti:endi, 7-whichhap]
+            genok <- kid[mychunk[starti:endi, ]$idx]
+            newhap <- which_fine_hap(hap0, fixhap, genok)
+            if(!is.null(newhap)){
+                mychunk[starti:endi, 4+whichhap] <- newhap
+            }  
+        }
+    }
+    return(mychunk)
 }
 
 
-move_bp <- function(mychunk, idx){
-    if(length(idx) > 0){
-        for(i in idx){
-            if(i <= win_length){
-                starti <- 1
-            }else{
-                starti <- idx-win_length
-            }
-            if((i+win_length) >= nrow(mychunk)){
-                endi <- nrow(mychunk)
-            }else{
-                endi <- idx + win_length
-            }
-            
-        }
+which_fine_hap <- function(hap0, fixhap, genok){
+    #genotype <- hap1+hap2
+    geno_probs=as.numeric() #prob of each of three genotypes
+    
+    for(geno in 1:length(hap0)){
+        genotype <- hap0[[geno]] + fixhap
+        #log(probs[[2]][three_genotypes,kidwin] is the log prob. of kid's obs geno 
+        #given the current phased geno and given mom is het. (which is why probs[[2]])
+        geno_probs[geno]=sum( sapply(1:length(genotype), function(zz) log( probs[[2]][genotype[zz]+1, genok[zz]+1])))
+    }
+    if(length(which(geno_probs==max(geno_probs)))==1){
+        return(hap0[[which.max(geno_probs)]])
+    }else{
+        return(NULL)
     }
 }
 
 
-
-
-minpath <- function(mychunk, verbose){
+###############################################################
+min_path <- function(mychunk, verbose){
     
     mychunk$r1 <- 0
     # compute the minimum distance to two haplotypes
@@ -102,27 +134,25 @@ minpath <- function(mychunk, verbose){
     
     if(length(idxs) == 1 ){
         myidx <- (idxs[1]+1):nrow(mychunk)
-        out <- compute_transition(mychunk, myidx, tx, verbose)
+        out <- compute_transition(mychunk, myidx, tx)
         mychunk <- out[[1]]
         tx <- out[[2]]
     }else if(length(idxs) > 1){
         for(i in 1:(length(idxs)-1)){
             myidx <- (idxs[i]+1):idxs[i+1]
-            out <- compute_transition(mychunk, myidx, tx, verbose)
+            out <- compute_transition(mychunk, myidx, tx)
             mychunk <- out[[1]]
             tx <- out[[2]]
         }
         myidx <- (idxs[length(idxs)]+1):length(mychunk)
-        out <- compute_transition(mychunk, myidx, tx, verbose)
+        out <- compute_transition(mychunk, myidx, tx)
         mychunk <- out[[1]]
         tx <- out[[2]]
     }
     
     return(mychunk)    
 }
-
-
-compute_transition <- function(mychunk, myidx, tx, verbose){
+compute_transition <- function(mychunk, myidx, tx){
     mychunk$t1 <- mychunk$r1
     mychunk$t2 <- mychunk$r2
     mychunk$t1[myidx] <- mychunk$r2[myidx]
@@ -140,9 +170,35 @@ compute_transition <- function(mychunk, myidx, tx, verbose){
     return(list(mychunk[, -9:-10], tx))
 }
 
-
-
-
+######################################################
+hap_in_chunk <- function(momphase, c, win_length, kid){
+    mychunk <- subset(momphase, chunk == c)
+    
+    #winstart <- i <- 1
+    ### kids haplotypes by window
+    mychunk$k1 <- 3
+    mychunk$k2 <- 3
+    if(win_length >= nrow(mychunk)){
+        idx <- mychunk$idx
+        haplotype <- mychunk$hap1
+        khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[idx]])
+        mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
+    }else{
+        for(win in 1:floor(nrow(mychunk)/win_length) ){
+            
+            idx <- ((win-1)*win_length+1) : (win*win_length)
+            haplotype <- mychunk$hap1[idx]
+            khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[idx]])
+            mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
+        }
+        ##### calculate last window
+        idx <- (nrow(mychunk)-win_length+1) : nrow(mychunk)
+        haplotype <- mychunk$hap1[idx]
+        khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[idx]])
+        mychunk <- copy_phase(haplotype, mychunk, khaps, idx)    
+    }
+    return(mychunk)
+}
 copy_phase <- function(haplotype, mychunk, khaps, idx){
     if(is.null(khaps)){
         mychunk$k1[idx] <- 3
@@ -162,11 +218,6 @@ copy_phase <- function(haplotype, mychunk, khaps, idx){
     return(mychunk)
 }
 
-
-
-
-############################################################################
-# Same as above, output kid's phase.
 # give this mom haplotype and a kid's diploid genotype over the window and returns maximum prob
 # Mendel is takenh care of in the probs[[]] matrix already
 #  chunk idx hap1 hap2
@@ -194,4 +245,10 @@ which_kid_hap <- function(haplotype, kidwin){
         return(NULL)
     }
 }
+
+
+
+
+
+
 

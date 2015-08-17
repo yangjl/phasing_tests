@@ -45,4 +45,4 @@ out10 <- comp_kids(simk, imputek=p)
 #[1] 0.06037394
 ###>>> Average error rate [ 0.0531363088057901 ]
 
-
+###>>> Average error rate [ 0.0399276236429433 ]
