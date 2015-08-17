@@ -4,7 +4,7 @@ comp_kids <- function(simk, imputek){
     for(i in 1:length(simk)){
         
         imputeki <- imputek[[i]][[3]]
-        simki <- simk[[i]][imputeki$idx, ]
+        simki <- simk[[i]][[2]][imputeki$idx, ]
         
         names(simki) <- c("shap1", "shap2", "obs")
         comb <- cbind(simki, imputeki)
