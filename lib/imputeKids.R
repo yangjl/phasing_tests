@@ -115,60 +115,6 @@ which_fine_hap <- function(hap0, fixhap, genok){
 }
 
 
-###############################################################
-min_path <- function(mychunk, verbose){
-    
-    mychunk$r1 <- 0
-    # compute the minimum distance to two haplotypes
-    mychunk[mychunk$k1!=3,]$r1 <- ifelse(mychunk[mychunk$k1!=3,]$k1 == mychunk[mychunk$k1!=3, ]$hap1, 1, 2)
-    mychunk$r2 <- 0
-    mychunk[mychunk$k2!=3,]$r2 <- ifelse(mychunk[mychunk$k2!=3,]$k2 == mychunk[mychunk$k2!=3, ]$hap1, 1, 2)
-    x1 <- factor(paste0(head(mychunk$r1,-1), tail(mychunk$r1,-1)), levels = c('11','12','21','22'))
-    tab1 <- table(x1)
-    x2 <- factor(paste0(head(mychunk$r2,-1), tail(mychunk$r2,-1)), levels = c('11','12','21','22'))
-    tab2 <- table(x2)
-    
-    #if(sum(tab1[2:3])>2 & sum(tab2[2:3])>2)
-    tx <- sum(tab1[2:3])+sum(tab2[2:3])
-    idxs <- sort(unique(c(which(x1=="12"), which(x1=="21"), which(x2=="12"), which(x2=="21"))))
-    
-    if(length(idxs) == 1 ){
-        myidx <- (idxs[1]+1):nrow(mychunk)
-        out <- compute_transition(mychunk, myidx, tx)
-        mychunk <- out[[1]]
-        tx <- out[[2]]
-    }else if(length(idxs) > 1){
-        for(i in 1:(length(idxs)-1)){
-            myidx <- (idxs[i]+1):idxs[i+1]
-            out <- compute_transition(mychunk, myidx, tx)
-            mychunk <- out[[1]]
-            tx <- out[[2]]
-        }
-        myidx <- (idxs[length(idxs)]+1):length(mychunk)
-        out <- compute_transition(mychunk, myidx, tx)
-        mychunk <- out[[1]]
-        tx <- out[[2]]
-    }
-    
-    return(mychunk)    
-}
-compute_transition <- function(mychunk, myidx, tx){
-    mychunk$t1 <- mychunk$r1
-    mychunk$t2 <- mychunk$r2
-    mychunk$t1[myidx] <- mychunk$r2[myidx]
-    mychunk$t2[myidx] <- mychunk$r1[myidx]
-    xt1 <- factor(paste0(head(mychunk$t1,-1), tail(mychunk$t1,-1)), levels = c('11','12','21','22'))
-    xtab1 <- table(xt1)
-    xt2 <- factor(paste0(head(mychunk$t2,-1), tail(mychunk$t2,-1)), levels = c('11','12','21','22'))
-    xtab2 <- table(xt2)
-    if(sum(xtab1[2:3])+sum(xtab2[2:3]) < tx){
-        mychunk$r1 <- mychunk$t1
-        mychunk$r2 <- mychunk$t2
-        tx2 <- sum(xtab1[2:3])+sum(xtab2[2:3])
-        tx <- tx2
-    }
-    return(list(mychunk[, -9:-10], tx))
-}
 
 ######################################################
 hap_in_chunk <- function(momphase, c, win_length, kid){
@@ -246,9 +192,57 @@ which_kid_hap <- function(haplotype, kidwin){
     }
 }
 
-
-
-
-
-
-
+###############################################################
+min_path <- function(mychunk, verbose){
+    
+    mychunk$r1 <- 0
+    # compute the minimum distance to two haplotypes
+    mychunk[mychunk$k1!=3,]$r1 <- ifelse(mychunk[mychunk$k1!=3,]$k1 == mychunk[mychunk$k1!=3, ]$hap1, 1, 2)
+    mychunk$r2 <- 0
+    mychunk[mychunk$k2!=3,]$r2 <- ifelse(mychunk[mychunk$k2!=3,]$k2 == mychunk[mychunk$k2!=3, ]$hap1, 1, 2)
+    x1 <- factor(paste0(head(mychunk$r1,-1), tail(mychunk$r1,-1)), levels = c('11','12','21','22'))
+    tab1 <- table(x1)
+    x2 <- factor(paste0(head(mychunk$r2,-1), tail(mychunk$r2,-1)), levels = c('11','12','21','22'))
+    tab2 <- table(x2)
+    
+    #if(sum(tab1[2:3])>2 & sum(tab2[2:3])>2)
+    tx <- sum(tab1[2:3])+sum(tab2[2:3])
+    idxs <- sort(unique(c(which(x1=="12"), which(x1=="21"), which(x2=="12"), which(x2=="21"))))
+    
+    if(length(idxs) == 1 ){
+        myidx <- (idxs[1]+1):nrow(mychunk)
+        out <- compute_transition(mychunk, myidx, tx)
+        mychunk <- out[[1]]
+        tx <- out[[2]]
+    }else if(length(idxs) > 1){
+        for(i in 1:(length(idxs)-1)){
+            myidx <- (idxs[i]+1):idxs[i+1]
+            out <- compute_transition(mychunk, myidx, tx)
+            mychunk <- out[[1]]
+            tx <- out[[2]]
+        }
+        myidx <- (idxs[length(idxs)]+1):length(mychunk)
+        out <- compute_transition(mychunk, myidx, tx)
+        mychunk <- out[[1]]
+        tx <- out[[2]]
+    }
+    
+    return(mychunk)    
+}
+compute_transition <- function(mychunk, myidx, tx){
+    mychunk$t1 <- mychunk$r1
+    mychunk$t2 <- mychunk$r2
+    mychunk$t1[myidx] <- mychunk$r2[myidx]
+    mychunk$t2[myidx] <- mychunk$r1[myidx]
+    xt1 <- factor(paste0(head(mychunk$t1,-1), tail(mychunk$t1,-1)), levels = c('11','12','21','22'))
+    xtab1 <- table(xt1)
+    xt2 <- factor(paste0(head(mychunk$t2,-1), tail(mychunk$t2,-1)), levels = c('11','12','21','22'))
+    xtab2 <- table(xt2)
+    if(sum(xtab1[2:3])+sum(xtab2[2:3]) < tx){
+        mychunk$r1 <- mychunk$t1
+        mychunk$r2 <- mychunk$t2
+        tx2 <- sum(xtab1[2:3])+sum(xtab2[2:3])
+        tx <- tx2
+    }
+    return(list(mychunk[, -9:-10], tx))
+}
