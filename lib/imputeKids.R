@@ -8,8 +8,8 @@ imputing <- function(momphase, progeny, win_length, verbose){
         
         for(c in unique(momphase$chunk)){
             ### find the best haps in a chunk
-            if(verbose){ message(sprintf(">>> imputing kid [ %s ]: chunk [ %s/%s ] of windows [ %s ] ...", 
-                                         k, c, length(unique(momphase$chunk)), floor(nrow(mychunk)/win_length) )) } 
+            if(verbose){ message(sprintf(">>> imputing kid [ %s ]: chunk [ %s/%s ] ...", 
+                                         k, c, length(unique(momphase$chunk)) )) } 
             mychunk <- hap_in_chunk(momphase, c, win_length, kid)
             
             #### find the min path of recombinations: it is already minimum path not necessary to run the following
