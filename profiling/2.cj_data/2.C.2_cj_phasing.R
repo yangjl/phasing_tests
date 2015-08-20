@@ -34,7 +34,7 @@ for(j in 6:ncol(chr)){
     progeny[[j-5]][[2]] <- chr[, j]
 }
 
-message(sprintf("###>>> phasing mom of [ %s ] kids for [ chr%s ]", ncol(chr)-5), i)
+message(sprintf("###>>> phasing mom of [ %s ] kids for [ chr%s ]", ncol(chr)-5, i))
 newmom <- phasing(estimated_mom=chr[, 5], progeny, win_length, verbose)
 #plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
 save(file=outfile, list=c("newmom"))

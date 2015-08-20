@@ -1,6 +1,6 @@
 input	num
-sbatch -p serial slurm-script/run_phasing.sh	1
-sbatch -p serial slurm-script/run_phasing.sh	2
+sbatch -p bigmemh slurm-script/run_phasing.sh 1
+sbatch -p serial slurm-script/run_phasing.sh 2
 sbatch -p serial slurm-script/run_phasing.sh	3
 sbatch -p serial slurm-script/run_phasing.sh	4
 sbatch -p serial slurm-script/run_phasing.sh	5
