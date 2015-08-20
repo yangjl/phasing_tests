@@ -28,13 +28,14 @@ newmom <- phasing(estimated_mom=input[[1]], progeny, win_length, verbose=TRUE)
 #plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
 
 pm <- write_mom(newmom)
+save(file=paste0("largedata/testout/", job, "_phasemom.RData"), list=c("sim","pm"))
 
 #ob <- load("largedata/lcached.RData")
 #simk <- get_sim_kids(sim)
 imputek <- imputing(momphase=pm, progeny, 15, verbose)
 rates <- comp_kids(simk=sim[[2]], imputek)
 
-save(file=paste0("largedata/out/", job, "_imputekid.RData"), list=c("sim","pm", "imputek", "rates"))
+save(file=paste0("largedata/testout/", job, "_imputekid.RData"), list=c("sim","pm", "imputek", "rates"))
 
 #simk <- progeny
 #
