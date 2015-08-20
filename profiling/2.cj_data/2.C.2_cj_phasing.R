@@ -4,8 +4,9 @@
 options(echo=TRUE) # if you want see commands in output file
 args <- commandArgs(trailingOnly = TRUE)
 idx <- args[1]
-job=args[2]
+job <- args[2]
 
+print(c(idx, job))
 
 ### loading all the functions in folder "lib"
 f <- sapply(list.files(pattern="[.]R$", path="lib", full.names=TRUE), source)
@@ -13,8 +14,8 @@ f <- sapply(list.files(pattern="[.]R$", path="lib", full.names=TRUE), source)
 
 ### start to phasing
 files <- read.table("largedata/sfamdata/all_files.txt", header=TRUE)
-infile <- files$input[idx]
-outfile <- files$output[idx]
+infile <- as.character(files$input)[idx]
+outfile <- as.character(files$output)[idx]
 chrnum <- files$chr[idx]
 
 win_length=10
