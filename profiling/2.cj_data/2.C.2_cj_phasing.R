@@ -3,7 +3,7 @@
 
 options(echo=TRUE) # if you want see commands in output file
 args <- commandArgs(trailingOnly = TRUE)
-idx <- args[1]
+idx <- as.numeric(as.character(args[1]))
 job <- args[2]
 
 print(c(idx, job))
