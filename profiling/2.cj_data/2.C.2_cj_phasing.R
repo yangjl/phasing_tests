@@ -22,6 +22,7 @@ verbose=TRUE
 probs <- get_error_mat(0.02, 0.8)[[2]]
 
 #########################
+ob <- load(infile)
 chr <- subset(mk, chr==chrnum)
 
 progeny <- list()
