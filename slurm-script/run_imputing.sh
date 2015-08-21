@@ -1,6 +1,6 @@
 #!/bin/bash -l
 #SBATCH -D /home/jolyang/Documents/Github/phasing_tests
-#SBATCH -J phase_mom
+#SBATCH -J imputekids
 #SBATCH -o /home/jolyang/Documents/Github/phasing_tests/slurm/phase_out-%j.txt
 #SBATCH -e /home/jolyang/Documents/Github/phasing_tests/slurm/phase_error-%j.txt
 

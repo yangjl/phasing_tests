@@ -36,7 +36,7 @@ for(j in 6:ncol(chr)){
 
 #message(sprintf("###>>> phasing mom of [ %s ] kids for [ chr%s ]", ncol(chr)-5, chrnum))
 pm <- write_mom(newmom)
-imputek <- imputing(momphase=pm, progeny, winstart=10, winend=500, stepsize=100, expect_recomb=1.5, verbose=TRUE)
+imputek <- imputing(momphase=pm, progeny, winstart=10, winend=500, stepsize=10, expect_recomb=1.5, verbose=TRUE)
 
 #plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
 save(file=infile, list=c("pm", "imputek"))
