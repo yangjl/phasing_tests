@@ -223,7 +223,7 @@ which_kid_hap <- function(haplotype, kidwin){
     if(length(which(geno_probs==max(geno_probs)))==1){
         return(which.max(geno_probs))
     }else{
-        return(NULL)
+        return(which.max(geno_probs))
     }
 }
 

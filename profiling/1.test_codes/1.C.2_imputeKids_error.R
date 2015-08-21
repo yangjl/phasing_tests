@@ -1,25 +1,9 @@
 ### Jinliang Yang
 ### August 19th, 2015
 
-
-imputek <- imputing(momphase=pm, progeny, 15, verbose)
-rates <- comp_kids(simk=sim[[2]], imputek)
-
-save(file=paste0("largedata/out/", job, "_imputekid.RData"), list=c("sim","pm", "imputek", "rates"))
-
-#simk <- progeny
-
-
-
-
-#>>> imputing kid [ 1 ]: chunk [ 2/58 ] ...
-#Error in `$<-.data.frame`(`*tmp*`, "k1", value = c(3, 3, 3, 3, 3, 3, 3,  : 
-#                                                       replacement has 2049 rows, data has 12
-#                                                   Calls: imputing ... hap_in_chunk -> copy_phase -> $<- -> $<-.data.frame
-#                                                   Execution halted
 f <- sapply(list.files(pattern="[.]R$", path="lib", full.names=TRUE), source)
 
-files <- list.files(path="largedata/out", pattern="imputekid.RData", full.names=TRUE)
+files <- list.files(path="largedata/testout", pattern="imputekid.RData", full.names=TRUE)
 
 phaserate <- imputerate <- data.frame()
 for(i in 1:length(files)){
@@ -41,9 +25,9 @@ write.table(imputerate, "data/impute_rate.csv", sep=",", row.names=FALSE, quote=
 phaserate <- read.csv("data/phase_rate.csv")
 imputerate <- read.csv("data/impute_rate.csv")
 
-hist(phaserate$rate[phaserate$rate < 0.1], breaks=30, main="Simulation (N=100)", col="#faebd7", xlab="Phasing Error Rate")
-abline(v=mean(phaserate$rate[phaserate$rate < 0.1]), col="red", lwd=2)
-abline(v=median(phaserate$rate[phaserate$rate < 0.1]), col="darkblue", lwd=2)
+hist(phaserate$rate, breaks=30, main="Simulation (N=100)", col="#faebd7", xlab="Phasing Error Rate")
+abline(v=mean(phaserate$rate), col="red", lwd=2)
+abline(v=median(phaserate$rate), col="darkblue", lwd=2)
 
 par(mfrow=c(1,2))
 hist(imputerate$phaserate, breaks=30, main="Kids Phasing Error", col="#faebd7", xlab="Error")

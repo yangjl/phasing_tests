@@ -1,44 +1,43 @@
 ### Jinliang Yang
 ### August 19th, 2015
 
+options(echo=TRUE) # if you want see commands in output file
+args <- commandArgs(trailingOnly = TRUE)
+idx <- as.numeric(as.character(args[1]))
+job <- args[2]
 
-newmom <- phasing(estimated_mom=input[[1]], progeny, win_length, verbose=TRUE)
-#plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
+print(c(idx, job))
 
-pm <- write_mom(newmom)
-
-#ob <- load("largedata/lcached.RData")
-#simk <- get_sim_kids(sim)
-imputek <- imputing(momphase=pm, progeny, 15, verbose)
-rates <- comp_kids(simk=sim[[2]], imputek)
-
-save(file=paste0("largedata/out/", job, "_imputekid.RData"), list=c("sim","pm", "imputek", "rates"))
-
-#simk <- progeny
-
-
-
-
-#>>> imputing kid [ 1 ]: chunk [ 2/58 ] ...
-#Error in `$<-.data.frame`(`*tmp*`, "k1", value = c(3, 3, 3, 3, 3, 3, 3,  : 
-#                                                       replacement has 2049 rows, data has 12
-#                                                   Calls: imputing ... hap_in_chunk -> copy_phase -> $<- -> $<-.data.frame
-#                                                   Execution halted
+### loading all the functions in folder "lib"
 f <- sapply(list.files(pattern="[.]R$", path="lib", full.names=TRUE), source)
 
-files <- list.files(path="largedata/out", pattern="imputekid.RData", full.names=TRUE)
 
-for(i in 1:length(files)){
-    rm(list=c("sim", "pm", "imputek"))
-    ob <- load(files[i])
-    merr <- mom_phasing_error(pm, sim)
-    message(sprintf("###>>> Mom phasing error [ %s ]", merr$rate))
-    
-    kerr <- kids_errs(simk=sim[[2]], imputek)
-    message(sprintf("###>>> Kids phasing err [ %s ] and geno err [ %s ]", mean(kerr$phaserate), mean(kerr$genorate)))
+### start to phasing
+files <- read.table("largedata/sfamdata/all_files.txt", header=TRUE)
+infile <- as.character(files$output)[idx]
+chrnum <- files$chr[idx]
+
+win_length=10
+verbose=TRUE
+probs <- get_error_mat(0.02, 0.8)[[2]]
+
+#########################
+print(infile)
+ob1 <- load(as.character(files$input)[idx])
+ob2 <- load(infile)
+chr <- subset(mk, chr==chrnum)
+
+progeny <- list()
+for(j in 6:ncol(chr)){
+    progeny[[j-5]] <- list()
+    progeny[[j-5]][[1]] <- chr[, j]
+    progeny[[j-5]][[2]] <- chr[, j]
 }
 
+#message(sprintf("###>>> phasing mom of [ %s ] kids for [ chr%s ]", ncol(chr)-5, chrnum))
+pm <- write_mom(newmom)
+imputek <- imputing(momphase=pm, progeny, winstart=10, winend=500, stepsize=100, expect_recomb=1.5, verbose=TRUE)
 
-
-
-write.table(out, paste0("largedata/out/", job, "_out.txt"), sep="\t", row.names=FALSE, quote=FALSE )
+#plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
+save(file=infile, list=c("pm", "imputek"))
+#########################
