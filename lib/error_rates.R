@@ -7,8 +7,8 @@ kids_errs <- function(simk, imputek){
         simki <- simk[[i]][[2]][imputeki$idx, ]
         
         names(simki) <- c("shap1", "shap2", "obs")
-        comb <- cbind(simki, imputeki)
-        
+        comb0 <- cbind(simki, imputeki)
+        comb <- subset(comb0, k1 != 3)
         err = 0
         for(j in unique(comb$chunk)){
             sub <- subset(comb, chunk == j)
@@ -18,7 +18,7 @@ kids_errs <- function(simk, imputek){
             err2 <- sum(sub$k2 != sub[, idx2])
             err <- err + err1 + err2
         }
-        tem <- data.frame(kid=i, err=err, tot=nrow(simki))
+        tem <- data.frame(kid=i, chunks=length(unique(comb$chunk)), err=err, tot=nrow(simki), miss= 1-nrow(comb)/nrow(comb0))
         tem$geno <- sum(comb$shap1+comb$shap2 != comb$k1+comb$k2)
         out <- rbind(out, tem)
     }

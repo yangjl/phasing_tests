@@ -32,14 +32,9 @@ save(file=paste0("largedata/testout/", job, "_phasemom.RData"), list=c("sim","pm
 
 #ob <- load("largedata/lcached.RData")
 #simk <- get_sim_kids(sim)
-imputek <- imputing(momphase=pm, progeny, 15, verbose)
-rates <- comp_kids(simk=sim[[2]], imputek)
+imputek <- imputing(momphase=pm, progeny, winstart=10, winend=500, stepsize=10, expect_recomb=1.5, verbose=TRUE)
+rates <- kids_errs(simk=sim[[2]], imputek)
 
 save(file=paste0("largedata/testout/", job, "_imputekid.RData"), list=c("sim","pm", "imputek", "rates"))
 
-#simk <- progeny
-#
 
-#[1] 0.06037394
-###>>> Average error rate [ 0.0531363088057901 ]
-###>>> Average error rate [ 0.0399276236429433 ]

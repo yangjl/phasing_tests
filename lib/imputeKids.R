@@ -1,31 +1,66 @@
 
 ##############################
-imputing <- function(momphase, progeny, win_length, verbose){
+imputing <- function(momphase, progeny, winstart, winend, stepsize, expect_recomb=1.5, verbose){
     
     for(k in 1:length(progeny)){
         kid <- progeny[[k]][[2]]
         kidgeno <- data.frame()
         
-        for(c in unique(momphase$chunk)){
-            ### find the best haps in a chunk
-            if(verbose){ message(sprintf(">>> imputing kid [ %s ]: chunk [ %s/%s ] ...", 
-                                         k, c, length(unique(momphase$chunk)) )) } 
-            mychunk <- hap_in_chunk(momphase, c, win_length, kid)
-            
-            #### find the min path of recombinations: it is already minimum path not necessary to run the following
-            #mychunk <- min_path(mychunk, verbose)
-            
-            ### refine break point
-            mychunk <- refine_brk_point(mychunk, win_length, verbose, kid)
-            
-            kidgeno <- rbind(kidgeno, mychunk)    
-        }
+        if(verbose){ message(sprintf("###>>> start to imputekid [ %s ] with [ %s ] chunks ...", 
+                                     k, length(unique(momphase$chunk)) )) }
+        win <- optimal_win(momphase, kid, winstart, winend, stepsize, expect_recomb)
+        if(verbose){ message(sprintf("###>>> optimal win length [ %s ] SNPs, diff1=%s, diff2=%s ...", win$win_length, win$bp1, win$bp2)) }
+        
+        kidgeno <- impute_onekid(momphase, kid, win_length=win$win_length, verbose=FALSE)
         progeny[[k]][[3]] <- kidgeno
     }
     return(progeny)
 }
 
 ######################################################
+impute_onekid <- function(momphase, kid, win_length, verbose){
+    
+    res <- data.frame()
+    for(c in unique(momphase$chunk)){
+        ### find the best haps in a chunk
+        mychunk <- hap_in_chunk(momphase, c, win_length, kid)
+        #### find the min path of recombinations: it is already minimum path not necessary to run the following
+        #mychunk <- min_path(mychunk, verbose)
+        
+        ### refine break point
+        mychunk <- refine_brk_point(mychunk, win_length, verbose, kid)[[1]]
+        #mychunk <- out[[1]]
+        res <- rbind(res, mychunk)
+    }
+    return(res)
+}
+optimal_win <- function(momphase, kid, winstart, winend, stepsize, expect_recomb){
+    bps <- data.frame()
+    
+    for(win_length in seq(from=winstart, to=winend, by=stepsize)){
+        
+        tem <- data.frame(win_length=winstart, bp1=0, bp2=0)
+        for(c in unique(momphase$chunk)){
+        ### find the best haps in a chunk
+            mychunk <- hap_in_chunk(momphase, c, win_length, kid)
+            #### find the min path of recombinations: it is already minimum path not necessary to run the following
+            #mychunk <- min_path(mychunk, verbose)
+            
+            ### refine break point
+            out <- refine_brk_point(mychunk, win_length, verbose=FALSE, kid)
+            #mychunk <- out[[1]]
+            tem <- data.frame(win_length=win_length, bp1= tem$bp1+ length(out[[2]][[1]]), bp2= tem$bp2+ length(out[[2]][[2]]))
+        }
+        bps <- rbind(bps, tem)
+           
+    }
+    bps$bp1 <- abs(bps$bp1 - expect_recomb)
+    bps$bp2 <- abs(bps$bp2 - expect_recomb)
+    idx <- which.min(bps$bp1+bps$bp2)
+    return(bps[idx,])
+}
+
+
 refine_brk_point <- function(mychunk, win_length, verbose, kid){
     
     bpoints <- get_break_point(mychunk)
@@ -40,7 +75,7 @@ refine_brk_point <- function(mychunk, win_length, verbose, kid){
     if(verbose){ message(sprintf("###>>> After refining: break points [ %s ] and [ %s ]", 
                                  length(bpoints[[1]]), length(bpoints[[2]]) )) } 
     
-    return(mychunk)
+    return(list(mychunk, bpoints))
 }
 
 get_break_point <- function(mychunk){
@@ -125,23 +160,23 @@ hap_in_chunk <- function(momphase, c, win_length, kid){
     mychunk$k1 <- 3
     mychunk$k2 <- 3
     if(win_length >= nrow(mychunk)){
-        idx <- mychunk$idx
+        #myidx <- mychunk$idx
         haplotype <- mychunk$hap1
-        khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[idx]])
-        mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
+        khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx])
+        mychunk <- copy_phase(haplotype, mychunk, khaps, idx=1:nrow(mychunk))
     }else{
         for(win in 1:floor(nrow(mychunk)/win_length) ){
             
-            idx <- ((win-1)*win_length+1) : (win*win_length)
-            haplotype <- mychunk$hap1[idx]
-            khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[idx]])
-            mychunk <- copy_phase(haplotype, mychunk, khaps, idx)
+            myidx <- ((win-1)*win_length+1) : (win*win_length)
+            haplotype <- mychunk$hap1[myidx]
+            khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[myidx]])
+            mychunk <- copy_phase(haplotype, mychunk, khaps, idx=myidx)
         }
         ##### calculate last window
-        idx <- (nrow(mychunk)-win_length+1) : nrow(mychunk)
-        haplotype <- mychunk$hap1[idx]
-        khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[idx]])
-        mychunk <- copy_phase(haplotype, mychunk, khaps, idx)    
+        myidx <- (nrow(mychunk)-win_length+1) : nrow(mychunk)
+        haplotype <- mychunk$hap1[myidx]
+        khaps <- which_kid_hap(haplotype, kidwin=kid[mychunk$idx[myidx]])
+        mychunk <- copy_phase(haplotype, mychunk, khaps, idx=myidx)    
     }
     return(mychunk)
 }
