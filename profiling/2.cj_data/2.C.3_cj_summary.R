@@ -20,13 +20,19 @@ rates <- get_rates(genomx[, -1:-4])
 
 
 
+
 par(mfrow=c(1,3))
 hist(rates[[1]]$imiss, breaks=30, main="plants missing rate", xlab="missing rate", col="darkgreen")
 hist(rates[[2]]$lmiss, breaks=30, main="Locus missing rate", xlab="missing rate", col="darkgreen")
 hist(rates[[3]]$maf, breaks=30, main="Minor Allele Freq", xlab="MAF", col="darkgreen")
 
 
+dup <- read.table("data/CJ_Duplicate_Selfed_Progeny.txt", header=TRUE)
 
+sub <- genomx[, c(as.character(dup$Rep1[4]), as.character(dup$Rep2[4]))]
+sub <- subset(sub, sub[, 1] !=3 & sub[, 2] != 3)
+sum(sub[, 1] != sub[, 2])/nrow(sub)
+head(sub[sub[, 1] != sub[, 2],])
 
 
 out_impute_matrix <- function(rdfiles="largedata/sfamdata/all_files.txt", asmissing=TRUE){
