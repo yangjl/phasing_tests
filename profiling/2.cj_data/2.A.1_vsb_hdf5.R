@@ -46,7 +46,8 @@ get_info <- function(){
     sites <- subset(info, seqnames !=0) 
     sites <- sites[, c("seqnames", "start", "ref", "alt")]
     sites <- sites[order(sites$seqnames, sites$start), ]
-    write.table(sites, "largedata/gbs_sites_v2.txt", sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
+    sites <- subset(sites, ref != "-" & alt != "-")
+    write.table(sites, "largedata/genotype_calls/gbs_sites_v2.txt", sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
     
     ### get genotype matrix
     genos <- geno(teo)

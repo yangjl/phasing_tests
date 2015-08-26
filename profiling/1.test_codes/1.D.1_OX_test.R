@@ -15,16 +15,14 @@ f <- sapply(list.files(pattern="[.]R$", path="lib", full.names=TRUE), source)
 sim <- SimOXer(size.array=10, het.error=0.8, hom.error=0.02, numloci=10000, rec=1.5, imiss=0.3, misscode = 3)
 input <- simOX_input(sim, n_phased=5)
 ###>>> [[1]]: unphased dad (vector)
-###>>> [[2]]: phased and unphased mom [ N=5 ] (list of data.frame + vector)
-###>>> [[3]]: outcrossed progeny [ N=10 ] (list of data.frame)
+###>>> [[2]]: phased and unphased mom [ N=5+5 ] (list of data.frame + vector)
+###>>> [[3]]: outcrossed progeny [ N=10 ] (list of list(real, obs))
 ###>>> [[4]]: pedigree (data.frame)
-
 
 dad_geno <- input[[1]]
 mom_array <- input[[2]]
 progeny <- input[[3]]
 ped <- input[[4]]    
-probs <- get_error_mat(0.02, 0.8)[[2]]
 
 newdad <- phasingDad(dad_geno, mom_array, progeny, win_length, verbose=FALSE)
 #plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
