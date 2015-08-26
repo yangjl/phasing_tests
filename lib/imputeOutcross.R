@@ -1,6 +1,6 @@
 
 ##############################
-imputingOutcorss <- function(momphase, progeny, winstart, winend, stepsize, expect_recomb=1.5, verbose){
+imputingOX <- function(momphase, progeny, winstart, winend, stepsize, expect_recomb=1.5, verbose){
     
     for(k in 1:length(progeny)){
         kid <- progeny[[k]][[2]]
