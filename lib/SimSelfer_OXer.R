@@ -1,5 +1,36 @@
 ### JRI: http://rpubs.com/rossibarra/self_impute
+SimOXer <- function(size.array=10, het.error=0.7, hom.error=0.002, numloci=1000, rec=1.5, imiss=0.3, misscode = 3){
+    
+    ### size.array: number of kids
+    ### imissing => individual missing rate, 
+    ### imiss > 1 will be sampled from a Beta(2,2) distribution (1- U-shaped)
+    ### rec: recombination rate 
+    
+    # make mom
+    sfs <- getsfs()
+    #get freqs for all loci
+    p <- sample(sfs, numloci, replace=TRUE) 
+    
+    ### make dad using a data.frame
+    sim_dad <- data.frame(hap1=ran.hap(numloci,p), hap2=ran.hap(numloci,p))
+    
+    ### make an array of mom
+    mom_array <- vector("list", size.array)
+    mom_array <- lapply(1:size.array, function(i)
+        data.frame(hap1=ran.hap(numloci,p), hap2=ran.hap(numloci,p)))
+    
+    # make selfed progeny array
+    progeny <- vector("list", size.array)
+    progeny <- lapply(1:size.array, function(a) 
+        kid(mom=list(mom_array[[a]][,1], mom_array[[a]][,2]), dad=list(sim_dad[,1],sim_dad[,2]), 
+            het.error, hom.error, rec, imiss, misscode))
+    #progeny <- replicate(size.array, kid(true_mom,true_mom, het.error, hom.error, recombination=TRUE))
+    return(list(sim_dad, mom_array, progeny))
+    ### output a list of three, [[1]] data.frame of simulated dad [[2]] list of simulated mom
+    ### [[3]] list of simulated kids, [[3]][[n=10]], [[[1]] breakpoints of hap1 and hap2 [[2]] data.frame of kid genotype
+}
 
+####
 SimSelfer <- function(size.array=20, het.error=0.7, hom.error=0.002, numloci=1000, rec=1.5, imiss=0.3){
     
     ### Simulate and Test
@@ -32,9 +63,10 @@ SimSelfer <- function(size.array=20, het.error=0.7, hom.error=0.002, numloci=100
     
 }
 
-### Create random haplotype
-ran.hap=function(numloci,p){sapply(1:numloci,function(x) rbinom(1,1,p[x]))}
-
+### Create random haplotype with sfs
+ran.hap <- function(numloci,p){
+    sapply(1:numloci,function(x) rbinom(1,1,p[x]))
+}
 ### setup the neutral SFS
 getsfs <- function(){
     x=1:99/100 #0.01 bins of freq.
@@ -56,7 +88,7 @@ add_error<-function(diploid,hom.error,het.error){
 }
 
 # Copy mom to kids with recombination
-copy.mom = function(mom, co_mean){ 
+copy.mom <- function(mom, co_mean){ 
     co=rpois(1,co_mean) #crossovers
     numloci=length(mom[[1]])
     recp=c(1,sort(round(runif(co, min=2, max=numloci-1))), numloci+1) #position   
