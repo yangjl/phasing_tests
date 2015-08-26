@@ -9,4 +9,4 @@
 set -e
 set -u
 
-angsd -nThreads 10 -doMajorMinor 3 -sites largedata/genotype_calls/head10_gbs_sites_v2.txt -GL 2 -bam largedata/genotype_calls/teo20_bamfiles_v2.txt -doGeno 5 -out largedata/genotype_calls/geno_call
+angsd -nThreads 10 -doMajorMinor 3 -sites largedata/genotype_calls/head10_gbs_sites_v2.txt -GL 2 -bam largedata/genotype_calls/teo20_bamfiles_v2.txt -doGeno 5 -doMaf 1 -doPost 1 -out largedata/genotype_calls/geno_call
