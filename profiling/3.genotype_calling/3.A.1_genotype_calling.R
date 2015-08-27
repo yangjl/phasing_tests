@@ -25,4 +25,4 @@ setUpslurm(slurmsh="slurm-script/teo20_geno_calling.sh",
 ###>>> In this path: cd /home/jolyang/Documents/Github/phasing_tests
 ###>>> [ note: --ntasks=INT, number of cup ]
 ###>>> [ note: --mem=16000, 16G memory ]
-###>>> RUN: sbatch -p bigmemh --mem 160000 --ntasks=20 slurm-script/teo20_geno_calling.sh
+###>>> RUN: sbatch -p bigmemh --mem 200000 --ntasks=20 slurm-script/teo20_geno_calling.sh

@@ -20,7 +20,7 @@ phasingDad <- function(dad_geno, mom_array, progeny, ped, win_length=10, errors=
     #### checking here!!! \\\\
     if(verbose){ message(sprintf("###>>> start to join hap chunks ...")) } 
     if(length(haplist) > 1){
-        out <- joint_dad_chunk(haplist, mom_array, progeny, ped, verbose)
+        out <- join_dad_chunk(haplist, mom_array, progeny, ped, verbose)
         if(verbose){ message(sprintf("###>>> Reduced chunks from [ %s ] to [ %s ]", length(haplist), length(out))) } 
         return(out)
     } else{
@@ -30,7 +30,7 @@ phasingDad <- function(dad_geno, mom_array, progeny, ped, win_length=10, errors=
 
 ##########################################
 
-joint_dad_chunk <- function(haplist, mom_array, progeny, ped, verbose){
+join_dad_chunk <- function(haplist, mom_array, progeny, ped, verbose){
     outhaplist <- list(list())
     outhaplist[[1]] <- haplist[[1]] ### store the extended haps: hap1, hap2 and idx
     i <- 1
