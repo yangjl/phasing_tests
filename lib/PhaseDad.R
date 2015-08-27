@@ -1,5 +1,5 @@
 ############################################################################
-# Get mom's phase
+# Get dad's phase based on phased or unphased moms and kids
 # should return two haps
 
 ### link haplotypes
@@ -12,22 +12,84 @@ phasingDad <- function(dad_geno, mom_array, progeny, ped, win_length=10, errors=
     
     probs <- get_error_mat(hom.error=errors[1], het.error=errors[2])[[2]]
     
-    
     haps <- setup_haps(win_length) 
-    if(verbose){ message(sprintf(">>> start to phase dad hap chunks ...")) }
+    if(verbose){ message(sprintf("###>>> start to phase dad hap chunks ...")) }
     haplist <- phase_dad_chuck(dad_geno, mom_array, progeny, ped, haps, probs, verbose)
     
-    if(verbose){ message(sprintf(">>> start to join hap chunks ...")) } 
+    
+    #### checking here!!! \\\\
+    if(verbose){ message(sprintf("###>>> start to join hap chunks ...")) } 
     if(length(haplist) > 1){
-        out <- joint_mom_chunk(haplist, verbose)
-        if(verbose){ message(sprintf(">>> Reduced chunks from [ %s ] to [ %s ]", length(haplist), length(out))) } 
+        out <- joint_dad_chunk(haplist, mom_array, progeny, ped, verbose)
+        if(verbose){ message(sprintf("###>>> Reduced chunks from [ %s ] to [ %s ]", length(haplist), length(out))) } 
         return(out)
-    }
-    else{
+    } else{
         return(haplist)
     }
 }
 
+##########################################
+
+joint_dad_chunk <- function(haplist, mom_array, progeny, ped, verbose){
+    outhaplist <- list(list())
+    outhaplist[[1]] <- haplist[[1]] ### store the extended haps: hap1, hap2 and idx
+    i <- 1
+    for(chunki in 2:length(haplist)){
+        if(verbose){ message(sprintf(">>> join chunks [ %s and %s, total:%s] ...", chunki-1, chunki, length(haplist))) }
+        # join two neighbor haplotype chunks
+        oldchunk <- haplist[[chunki-1]]
+        newchunk <- haplist[[chunki]]
+        hapidx <- c(oldchunk[[3]], newchunk[[3]])
+        haps <- list(c(oldchunk[[1]], newchunk[[1]]), c(oldchunk[[1]], newchunk[[2]]))
+        temhap <- link_haps(momwin=hapidx, progeny, haps, returnhap=FALSE)
+        if(!is.null(temhap)){
+            outold <- outhaplist[[i]][[1]]
+            outoldchunk <- outold[ (length(outold)-length(oldchunk[[1]])+1):length(outold)]
+            outnewchunk <- temhap[(length(oldchunk[[1]])+1):length(temhap)]
+            
+            same <- sum(outoldchunk == temhap[1:length(oldchunk[[1]])])
+            #same <- sum(mom_phase1[(length(mom_phase1)-8):length(mom_phase1)] == win_hap[1:length(win_hap)-1])
+            outhaplist[[i]][[3]] <- c(outhaplist[[i]][[3]], newchunk[[3]])
+            if(same == 0){ #totally opposite phase of last window
+                #hap2[length(mom_phase2)+1] <- win_hap[length(win_hap)]
+                
+                outhaplist[[i]][[1]] <- c(outhaplist[[i]][[1]], 1-outnewchunk)
+                outhaplist[[i]][[2]] <- c(outhaplist[[i]][[2]], outnewchunk)
+                
+            } else if(same== length(oldchunk[[1]]) ){ #same phase as last window
+                #mom_phase1[length(mom_phase1)+1] <- win_hap[length(win_hap)]
+                
+                outhaplist[[i]][[1]] <- c(outhaplist[[i]][[1]], outnewchunk)
+                outhaplist[[i]][[2]] <- c(outhaplist[[i]][[2]], 1-outnewchunk)
+            } else{
+                stop(">>> Extending error !!!")
+            }
+        } else {
+            i <- i +1
+            outhaplist[[i]] <- haplist[[chunki]]
+        } 
+    }
+    return(outhaplist)
+}
+#######
+link_haps <- function(momwin, progeny, haps, returnhap=FALSE){  
+    # momwin is list of heterozygous sites, progeny list of kids genotypes, 
+    # haps list of possible haps,momphase1 is current phased mom for use in splitting ties
+    #### function for running one hap ####
+    runoverhaps <- function(myhap){
+        #iterate over possible haplotypes <- this is slower because setup_haps makes too many haps
+        #get max. prob for each kid, sum over kids
+        return(sum( sapply(1:length(progeny), function(z) 
+            which_phase(haps[myhap], progeny[[z]][[2]][momwin] ))))
+    }
+    phase_probs <- sapply(1:(length(haps)), function(a) runoverhaps(a) )
+    #if multiple haps tie, return two un-phased haps
+    if(length(which(phase_probs==max(phase_probs)))>1){
+        return(NULL)
+    } else {
+        return(haps[[which.max(phase_probs)]])
+    }
+}
 ##########################################
 phase_dad_chuck <- function(dad_geno, mom_array, progeny, ped, haps, probs, verbose){
     hetsites <- which(dad_geno==1)
@@ -153,9 +215,9 @@ sum_max_log_1hap <- function(winidx, dad_hap, ped, mom_array, progeny){
     ### log likely hood of one dad hap x all mom hap for all kids
     maxlog <- lapply(1:nrow(ped), function(x) {
         mymom <- mom_array[[ped$mom[x]]]
-        if(!is.null(nrow(mymom))){
+        if(!is.null(nrow(mymom))){ #phased mom
             mom_haps <- list(mymom[winidx, ]$hap1, mymom[winidx, ]$hap2)
-        }else{
+        }else{ #unphased mom
             mom_geno <- mymom[winidx]
             het_idx <- which(mom_geno==1)
             if(length(het_idx) > 0){
@@ -168,13 +230,12 @@ sum_max_log_1hap <- function(winidx, dad_hap, ped, mom_array, progeny){
                     temhap[het_idx] <- allhaps[[x]]
                     return(temhap)})
             }else{
-                mom_haps <- mom_geno/2
+                mom_haps <- list(mom_geno/2)
             }   
         }
         kid_geno <- progeny[[x]][[2]][winidx]
-        
         ####>>>
-        max_log_1hap_1kid(dad_hap, mom_haps, kid_geno )
+        max_log_1hap_1kid(dad_hap, mom_haps, kid_geno)
     })
     return(sum(unlist(maxlog)))
 } 
@@ -191,109 +252,21 @@ max_log_1hap_1kid <- function(dad_hap, mom_haps, kid_geno){
     geno_probs <- lapply(1:length(allgenos), function(geno){
         #log(probs[[2]][three_genotypes,kidwin] is the log prob. of kid's obs geno 
         #given the current phased geno and given mom is het. (which is why probs[[2]])
-        sum( sapply(1:length(dad_hap), function(zz) {
+        sum( unlist(lapply(1:length(dad_hap), function(zz) {
             if(tem_mom_haps[[geno]][zz] == 0){
                 tem <- probs[[1]][allgenos[[geno]][zz]+1, kid_geno[zz]+1]
             }else if(tem_mom_haps[[geno]][zz] == 1){
                 tem <- probs[[2]][allgenos[[geno]][zz]+1, kid_geno[zz]+1]
             }else if(tem_mom_haps[[geno]][zz] == 2){
                 tem <- probs[[3]][allgenos[[geno]][zz]+1, kid_geno[zz]+1]
+            }else if(tem_mom_haps[[geno]][zz] == 1.5){
+                tem <- 1
             }
             return(log(tem))
-            })
+            }))
         )   
     })
     ### may introduce error
     #if(length(which(geno_probs==max(geno_probs)))!=1){recover()}
     return(max(unlist(geno_probs)))
 }
-
-
-
-##########################################
-joint_mom_chunk <- function(haplist, verbose){
-    outhaplist <- list(list())
-    outhaplist[[1]] <- haplist[[1]] ### store the extended haps: hap1, hap2 and idx
-    i <- 1
-    for(chunki in 2:length(haplist)){
-        if(verbose){ message(sprintf(">>> join chunks [ %s and %s, total:%s] ...", chunki-1, chunki, length(haplist))) }
-        # join two neighbor haplotype chunks
-        oldchunk <- haplist[[chunki-1]]
-        newchunk <- haplist[[chunki]]
-        hapidx <- c(oldchunk[[3]], newchunk[[3]])
-        haps <- list(c(oldchunk[[1]], newchunk[[1]]), c(oldchunk[[1]], newchunk[[2]]))
-        temhap <- link_haps(momwin=hapidx, progeny, haps, returnhap=FALSE)
-        if(!is.null(temhap)){
-            outold <- outhaplist[[i]][[1]]
-            outoldchunk <- outold[ (length(outold)-length(oldchunk[[1]])+1):length(outold)]
-            outnewchunk <- temhap[(length(oldchunk[[1]])+1):length(temhap)]
-            
-            same <- sum(outoldchunk == temhap[1:length(oldchunk[[1]])])
-            #same <- sum(mom_phase1[(length(mom_phase1)-8):length(mom_phase1)] == win_hap[1:length(win_hap)-1])
-            outhaplist[[i]][[3]] <- c(outhaplist[[i]][[3]], newchunk[[3]])
-            if(same == 0){ #totally opposite phase of last window
-                #hap2[length(mom_phase2)+1] <- win_hap[length(win_hap)]
-                                
-                outhaplist[[i]][[1]] <- c(outhaplist[[i]][[1]], 1-outnewchunk)
-                outhaplist[[i]][[2]] <- c(outhaplist[[i]][[2]], outnewchunk)
-                
-            } else if(same== length(oldchunk[[1]]) ){ #same phase as last window
-                #mom_phase1[length(mom_phase1)+1] <- win_hap[length(win_hap)]
-                
-                outhaplist[[i]][[1]] <- c(outhaplist[[i]][[1]], outnewchunk)
-                outhaplist[[i]][[2]] <- c(outhaplist[[i]][[2]], 1-outnewchunk)
-            } else{
-                stop(">>> Extending error !!!")
-            }
-        } else {
-            i <- i +1
-            outhaplist[[i]] <- haplist[[chunki]]
-        } 
-    }
-    return(outhaplist)
-}
-############################################################################
-link_haps <- function(momwin, progeny, haps, returnhap=FALSE){  
-    # momwin is list of heterozygous sites, progeny list of kids genotypes, 
-    # haps list of possible haps,momphase1 is current phased mom for use in splitting ties
-    #### function for running one hap ####
-    runoverhaps <- function(myhap){
-        #iterate over possible haplotypes <- this is slower because setup_haps makes too many haps
-        #get max. prob for each kid, sum over kids
-        return(sum( sapply(1:length(progeny), function(z) 
-            which_phase(haps[myhap], progeny[[z]][[2]][momwin] ))))
-    }
-    phase_probs <- sapply(1:(length(haps)), function(a) runoverhaps(a) )
-    #if multiple haps tie, return two un-phased haps
-    if(length(which(phase_probs==max(phase_probs)))>1){
-        return(NULL)
-    } else {
-        return(haps[[which.max(phase_probs)]])
-    }
-}
-
-############################################################################
-
-
-############################################################################
-# Setup all possible haplotypes for window of X heterozgous sites
-# This needs to be fixed to remove redundancy. E.g. 010 is the same as 101 and 1010 is same as 0101. 
-# I don't think should bias things in the meantime, just be slow.
-setup_haps <- function(win_length){
-    if(win_length <= 20){
-        alist <- lapply(1:win_length, function(a) c(0,1) )
-        ### give a combination of all 0,1 into a data.frame
-        hapdf <- expand.grid(alist)[1:2^(win_length-1),]
-        ### split the data.frame into a list
-        return(as.list(as.data.frame(t(hapdf)))) 
-    }else{
-        stop("!!! Can not handle [win_length > 20] !")
-    }   
-}
-#system.time(tem2 <- setup_haps2(10))
-#system.time(tem <- setup_haps(10))
-
-
-############################################################################
-
-
