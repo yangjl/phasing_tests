@@ -12,6 +12,7 @@ phasingDad <- function(dad_geno, mom_array, progeny, ped, win_length=10, errors=
     
     probs <- get_error_mat(hom.error=errors[1], het.error=errors[2])[[2]]
     
+    #### phasing chunks
     haps <- setup_haps(win_length) 
     if(verbose){ message(sprintf("###>>> start to phase dad hap chunks ...")) }
     haplist <- phase_dad_chuck(dad_geno, mom_array, progeny, ped, haps, probs, verbose)
@@ -19,7 +20,7 @@ phasingDad <- function(dad_geno, mom_array, progeny, ped, win_length=10, errors=
     #save(list=c("haplist", "mom_array", "progeny", "ped", "probs", "verbose"), file="largedata/haplist.RData")
     #load("largedata/haplist.RData")
     
-    #### checking here!!! \\\\
+    #### join chunks
     if(verbose){ message(sprintf("###>>> start to join hap chunks ...")) } 
     if(length(haplist) > 1){
         out <- join_dad_chunks(haplist, mom_array, progeny, ped, probs, verbose, unphased_mom=FALSE)
@@ -183,9 +184,6 @@ phase_dad_chuck <- function(dad_geno, mom_array, progeny, ped, haps, probs, verb
         winidx <- hetsites[winstart:(winstart+win_length-1)]
         if(winstart==1){ 
             #arbitrarily assign win_hap to one chromosome initially
-            
-            
-            
             # get the most likely dad haplotype, NULL is not allowed
             win_hap <- infer_dad_dip(winidx, mom_array, progeny, ped, haps, returnhap=TRUE)
             dad_phase1 <- win_hap
@@ -291,7 +289,23 @@ sum_max_log_1hap <- function(winidx, dad_hap, ped, mom_array, progeny){
     maxlog <- lapply(1:nrow(ped), function(x) {
         mymom <- mom_array[[ped$mom[x]]]
         if(!is.null(nrow(mymom))){ #phased mom
-            mom_haps <- list(mymom[winidx, ]$hap1, mymom[winidx, ]$hap2)
+            temmom <- mymom[winidx, ]
+            if(length(unique(temmom$chunk))==1){
+                mom_haps <- list(mymom[winidx, ]$hap1, mymom[winidx, ]$hap2)
+            }else{
+                haps1 <- setup_haps(length(unique(temmom$chunk)))
+                haps2 <- lapply(1:length(haps1), function(x) 1-haps1[[x]])
+                allhaps <- c(haps1, haps2)
+                mom_haps <- lapply(1:length(allhaps), function(x){
+                    
+                    temout <- c()
+                    for(c in unique(temmom$chunk)){
+                        temout <- c(temout, temmom[temmom$chunk==c, allhaps[[x]][c]+1])
+                    }
+                    return(temout)    
+                })
+            }
+            
         }else{ #unphased mom
             mom_geno <- mymom[winidx]
             het_idx <- which(mom_geno==1)

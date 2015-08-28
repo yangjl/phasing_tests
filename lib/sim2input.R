@@ -14,14 +14,17 @@ sim2input <- function(sim){
     return(list(simp$geno, progeny))
 }
 
-simOX_input <- function(sim, n_phased=5){
+simOX_input <- function(sim, n_phased=5, n_chunk=1){
     ### object of sim: output a list of three, [[1]] data.frame of simulated dad [[2]] list of simulated mom
     ### [[3]] list of simulated kids, [[3]][[n=10]], [[[1]] breakpoints of hap1 and hap2 [[2]] data.frame of kid genotype
     
     unphased_dad <- sim[[1]]$hap1 + sim[[1]]$hap2 
     
     if(n_phased > 0){
-        mom <- sim[[2]][1:n_phased] 
+        mom <- sim[[2]][1:n_phased]
+        for(i in 1:n_phased){
+            mom[[i]]$chunk <- sort(sample(c(1:n_chunk), nrow(mom[[i]]), replace=TRUE))
+        }
     }else{
         mom <- list()
     }
