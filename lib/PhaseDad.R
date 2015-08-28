@@ -16,11 +16,13 @@ phasingDad <- function(dad_geno, mom_array, progeny, ped, win_length=10, errors=
     if(verbose){ message(sprintf("###>>> start to phase dad hap chunks ...")) }
     haplist <- phase_dad_chuck(dad_geno, mom_array, progeny, ped, haps, probs, verbose)
     
+    #save(list="haplist", file="largedata/haplist.RData")
+    #load("largedata/haplist.RData")
     
     #### checking here!!! \\\\
     if(verbose){ message(sprintf("###>>> start to join hap chunks ...")) } 
     if(length(haplist) > 1){
-        out <- join_dad_chunk(haplist, mom_array, progeny, ped, verbose)
+        out <- join_dad_chunks(haplist, mom_array, progeny, ped, probs, verbose)
         if(verbose){ message(sprintf("###>>> Reduced chunks from [ %s ] to [ %s ]", length(haplist), length(out))) } 
         return(out)
     } else{
@@ -30,7 +32,7 @@ phasingDad <- function(dad_geno, mom_array, progeny, ped, win_length=10, errors=
 
 ##########################################
 
-join_dad_chunk <- function(haplist, mom_array, progeny, ped, verbose){
+join_dad_chunks <- function(haplist, mom_array, progeny, ped, probs, verbose){
     outhaplist <- list(list())
     outhaplist[[1]] <- haplist[[1]] ### store the extended haps: hap1, hap2 and idx
     i <- 1
@@ -145,7 +147,7 @@ max_joint_1hap <- function(dad_hap, hapidx, mom_array, progeny, ped){
         ####>>>
         max_log_1hap_1kid(dad_hap, mom_haps, kid_geno)
     })
-    return(max(maxlog))
+    return(max(unlist(maxlog)))
 }
 ##########################################
 phase_dad_chuck <- function(dad_geno, mom_array, progeny, ped, haps, probs, verbose){

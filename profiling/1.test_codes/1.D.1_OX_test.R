@@ -22,7 +22,10 @@ input <- simOX_input(sim, n_phased=5)
 dad_geno <- input[[1]]
 mom_array <- input[[2]]
 progeny <- input[[3]]
-ped <- input[[4]]    
+ped <- input[[4]]
+win_length=10
+errors=c(0.02, 0.8)
+verbose=TRUE
 
 newdad <- phasingDad(dad_geno, mom_array, progeny, win_length, verbose=FALSE)
 #plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
