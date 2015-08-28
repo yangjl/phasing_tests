@@ -39,9 +39,9 @@ join_dad_chunk <- function(haplist, mom_array, progeny, ped, verbose){
         # join two neighbor haplotype chunks
         oldchunk <- haplist[[chunki-1]]
         newchunk <- haplist[[chunki]]
-        hapidx <- c(oldchunk[[3]], newchunk[[3]])
-        haps <- list(c(oldchunk[[1]], newchunk[[1]]), c(oldchunk[[1]], newchunk[[2]]))
-        temhap <- link_haps(momwin=hapidx, progeny, haps, returnhap=FALSE)
+        hapidx <- c(oldchunk[3], newchunk[3])
+        dad_haps <- list(c(oldchunk[[1]], newchunk[[1]]), c(oldchunk[[1]], newchunk[[2]]))
+        temhap <- link_dad_haps(dad_haps, hapidx, mom_array, progeny, ped, returnhap=FALSE)
         if(!is.null(temhap)){
             outold <- outhaplist[[i]][[1]]
             outoldchunk <- outold[ (length(outold)-length(oldchunk[[1]])+1):length(outold)]
@@ -72,23 +72,80 @@ join_dad_chunk <- function(haplist, mom_array, progeny, ped, verbose){
     return(outhaplist)
 }
 #######
-link_haps <- function(momwin, progeny, haps, returnhap=FALSE){  
-    # momwin is list of heterozygous sites, progeny list of kids genotypes, 
-    # haps list of possible haps,momphase1 is current phased mom for use in splitting ties
-    #### function for running one hap ####
-    runoverhaps <- function(myhap){
-        #iterate over possible haplotypes <- this is slower because setup_haps makes too many haps
-        #get max. prob for each kid, sum over kids
-        return(sum( sapply(1:length(progeny), function(z) 
-            which_phase(haps[myhap], progeny[[z]][[2]][momwin] ))))
-    }
-    phase_probs <- sapply(1:(length(haps)), function(a) runoverhaps(a) )
+link_dad_haps <- function(dad_haps, hapidx, mom_array, progeny, ped, returnhap=FALSE){
+    ### hapidx: a list of idx [[1]] chunk0; [[2]]chunk1
+    
+    
+    phase_probs <- lapply(1:(length(dad_haps)), function(a) {
+        max_joint_1hap(dad_haps[[a]], hapidx, mom_array, progeny, ped)
+    } )
+    phase_probs <- unlist(phase_probs)
     #if multiple haps tie, return two un-phased haps
     if(length(which(phase_probs==max(phase_probs)))>1){
         return(NULL)
     } else {
-        return(haps[[which.max(phase_probs)]])
+        return(dad_haps[[which.max(phase_probs)]])
     }
+}
+
+max_joint_1hap <- function(dad_hap, hapidx, mom_array, progeny, ped){
+    ### log likely hood of one dad hap x all mom hap for all kids
+    maxlog <- lapply(1:nrow(ped), function(x) {
+        mymom <- mom_array[[ped$mom[x]]]
+        myidx <- c(hapidx[[1]], hapidx[[2]])
+        
+        if(!is.null(nrow(mymom))){ #phased mom
+            
+            if(sum(mymom[myidx, ]$hap1 != mymom[myidx, ]$hap2) > 0){
+                mom_haps <- list(mymom[myidx, ]$hap1, mymom[myidx, ]$hap2)
+            }else{
+                mom_haps <- list(mymom[mydix,]$hap1)
+            }
+            
+        }else{ #unphased mom
+            mom_geno <- mymom[myidx]
+            het_idx <- which(mom_geno==1)
+            
+            ### if mom het >20 reduce to 20 to reduce computational burden
+            if(length(het_idx) > 20){
+                up_geno <- mymom[hapidx[[1]]]
+                up_idx <- hapidx[[1]][up_geno==1]
+                if(length(up_idx) > 10){
+                    newidx1 <- hapidx[[1]][which(hapidx[[1]]==up_idx[length(up_idx)-10+1]):length(hapidx[[1]])]
+                }else{
+                    newidx1 <- hapidx[[1]] 
+                }
+                down_geno <- mymom[hapidx[[2]]]
+                down_idx <- hapidx[[2]][down_geno==1]
+                if(length(down_idx) > 10){
+                    newidx2 <- hapidx[[2]][1:which(hapidx[[2]]==down_idx[10])]
+                }else{
+                    newidx2 <- hapidx[[2]] 
+                }
+                myidx <- c(newidx1, newidx2)
+                mom_geno <- mymom[myidx]
+                het_idx <- which(mom_geno==1)
+            }
+            
+            
+            if(length(het_idx) > 0 ){
+                haps1 <- setup_haps(win_length=length(het_idx))
+                haps2 <- lapply(1:length(haps1), function(x) 1-haps1[[x]])
+                allhaps <- c(haps1, haps2)
+                mom_haps <- vector("list", 2^length(het_idx))
+                mom_haps <- lapply(1:length(mom_haps), function(x) {
+                    temhap <- mom_geno/2
+                    temhap[het_idx] <- allhaps[[x]]
+                    return(temhap)})
+            }else if(length(het_idx)==0){
+                mom_haps <- list(mom_geno/2)
+            }   
+        }
+        kid_geno <- progeny[[x]][[2]][myidx]
+        ####>>>
+        max_log_1hap_1kid(dad_hap, mom_haps, kid_geno)
+    })
+    return(max(maxlog))
 }
 ##########################################
 phase_dad_chuck <- function(dad_geno, mom_array, progeny, ped, haps, probs, verbose){

@@ -12,7 +12,7 @@ f <- sapply(list.files(pattern="[.]R$", path="lib", full.names=TRUE), source)
 
 ### simulation perfect mom and noisy kids
 #set.seed(1235678*i)
-sim <- SimOXer(size.array=10, het.error=0.8, hom.error=0.02, numloci=10000, rec=1.5, imiss=0.3, misscode = 3)
+sim <- SimOXer(size.array=10, het.error=0.8, hom.error=0.02, numloci=1000, rec=1.5, imiss=0.3, misscode = 3)
 input <- simOX_input(sim, n_phased=5)
 ###>>> [[1]]: unphased dad (vector)
 ###>>> [[2]]: phased and unphased mom [ N=5+5 ] (list of data.frame + vector)
