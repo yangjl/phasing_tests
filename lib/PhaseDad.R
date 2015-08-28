@@ -16,13 +16,13 @@ phasingDad <- function(dad_geno, mom_array, progeny, ped, win_length=10, errors=
     if(verbose){ message(sprintf("###>>> start to phase dad hap chunks ...")) }
     haplist <- phase_dad_chuck(dad_geno, mom_array, progeny, ped, haps, probs, verbose)
     
-    #save(list="haplist", file="largedata/haplist.RData")
+    #save(list=c("haplist", "input"), file="largedata/haplist.RData")
     #load("largedata/haplist.RData")
     
     #### checking here!!! \\\\
     if(verbose){ message(sprintf("###>>> start to join hap chunks ...")) } 
     if(length(haplist) > 1){
-        out <- join_dad_chunks(haplist, mom_array, progeny, ped, probs, verbose)
+        out <- join_dad_chunks(haplist, mom_array, progeny, ped, probs, verbose, unphased_mom=TRUE)
         if(verbose){ message(sprintf("###>>> Reduced chunks from [ %s ] to [ %s ]", length(haplist), length(out))) } 
         return(out)
     } else{
@@ -31,8 +31,7 @@ phasingDad <- function(dad_geno, mom_array, progeny, ped, win_length=10, errors=
 }
 
 ##########################################
-
-join_dad_chunks <- function(haplist, mom_array, progeny, ped, probs, verbose){
+join_dad_chunks <- function(haplist, mom_array, progeny, ped, probs, verbose, unphased_mom){
     outhaplist <- list(list())
     outhaplist[[1]] <- haplist[[1]] ### store the extended haps: hap1, hap2 and idx
     i <- 1
@@ -43,7 +42,9 @@ join_dad_chunks <- function(haplist, mom_array, progeny, ped, probs, verbose){
         newchunk <- haplist[[chunki]]
         hapidx <- c(oldchunk[3], newchunk[3])
         dad_haps <- list(c(oldchunk[[1]], newchunk[[1]]), c(oldchunk[[1]], newchunk[[2]]))
-        temhap <- link_dad_haps(dad_haps, hapidx, mom_array, progeny, ped, returnhap=FALSE)
+        dad_haps_lofl <- list(list(oldchunk[[1]], newchunk[[1]]), list(oldchunk[[1]], newchunk[[2]]))
+
+        temhap <- link_dad_haps(dad_haps_lofl, hapidx, mom_array, progeny, ped, unphased_mom)
         if(!is.null(temhap)){
             outold <- outhaplist[[i]][[1]]
             outoldchunk <- outold[ (length(outold)-length(oldchunk[[1]])+1):length(outold)]
@@ -74,12 +75,12 @@ join_dad_chunks <- function(haplist, mom_array, progeny, ped, probs, verbose){
     return(outhaplist)
 }
 #######
-link_dad_haps <- function(dad_haps, hapidx, mom_array, progeny, ped, returnhap=FALSE){
+link_dad_haps <- function(dad_haps_lofl, hapidx, mom_array, progeny, ped, unphased_mom){
     ### hapidx: a list of idx [[1]] chunk0; [[2]]chunk1
     
     
-    phase_probs <- lapply(1:(length(dad_haps)), function(a) {
-        max_joint_1hap(dad_haps[[a]], hapidx, mom_array, progeny, ped)
+    phase_probs <- lapply(1:length(dad_haps_lofl), function(a) {
+        max_joint_1hap(dad_hap=dad_haps_lofl[[a]], hapidx, mom_array, progeny, ped, unphased_mom)
     } )
     phase_probs <- unlist(phase_probs)
     #if multiple haps tie, return two un-phased haps
@@ -90,7 +91,7 @@ link_dad_haps <- function(dad_haps, hapidx, mom_array, progeny, ped, returnhap=F
     }
 }
 
-max_joint_1hap <- function(dad_hap, hapidx, mom_array, progeny, ped){
+max_joint_1hap <- function(dad_hap, hapidx, mom_array, progeny, ped, unphased_mom){
     ### log likely hood of one dad hap x all mom hap for all kids
     maxlog <- lapply(1:nrow(ped), function(x) {
         mymom <- mom_array[[ped$mom[x]]]
@@ -103,8 +104,9 @@ max_joint_1hap <- function(dad_hap, hapidx, mom_array, progeny, ped){
             }else{
                 mom_haps <- list(mymom[mydix,]$hap1)
             }
+            dad_hap <- c(dad_hap[[1]], dad_hap[[2]])
             
-        }else{ #unphased mom
+        }else if(unphased_mom){ #unphased mom, default=TRUE
             mom_geno <- mymom[myidx]
             het_idx <- which(mom_geno==1)
             
@@ -114,22 +116,29 @@ max_joint_1hap <- function(dad_hap, hapidx, mom_array, progeny, ped){
                 up_idx <- hapidx[[1]][up_geno==1]
                 if(length(up_idx) > 10){
                     newidx1 <- hapidx[[1]][which(hapidx[[1]]==up_idx[length(up_idx)-10+1]):length(hapidx[[1]])]
+                    up_dad_hap <- dad_hap[[1]][which(hapidx[[1]]==up_idx[length(up_idx)-10+1]):length(hapidx[[1]])]
                 }else{
                     newidx1 <- hapidx[[1]] 
+                    up_dad_hap <- dad_hap[[1]]
                 }
+                
+                
                 down_geno <- mymom[hapidx[[2]]]
                 down_idx <- hapidx[[2]][down_geno==1]
                 if(length(down_idx) > 10){
                     newidx2 <- hapidx[[2]][1:which(hapidx[[2]]==down_idx[10])]
+                    down_dad_hap <- dad_hap[[2]][1:which(hapidx[[2]]==down_idx[10])]
                 }else{
-                    newidx2 <- hapidx[[2]] 
+                    newidx2 <- hapidx[[2]]
+                    down_dad_hap <- dad_hap[[2]]
                 }
+                
+                dad_hap <- c(up_dad_hap, down_dad_hap)
                 myidx <- c(newidx1, newidx2)
                 mom_geno <- mymom[myidx]
                 het_idx <- which(mom_geno==1)
             }
-            
-            
+
             if(length(het_idx) > 0 ){
                 haps1 <- setup_haps(win_length=length(het_idx))
                 haps2 <- lapply(1:length(haps1), function(x) 1-haps1[[x]])
