@@ -16,13 +16,13 @@ phasingDad <- function(dad_geno, mom_array, progeny, ped, win_length=10, errors=
     if(verbose){ message(sprintf("###>>> start to phase dad hap chunks ...")) }
     haplist <- phase_dad_chuck(dad_geno, mom_array, progeny, ped, haps, probs, verbose)
     
-    #save(list=c("haplist", "input"), file="largedata/haplist.RData")
+    #save(list=c("haplist", "mom_array", "progeny", "ped", "probs", "verbose"), file="largedata/haplist.RData")
     #load("largedata/haplist.RData")
     
     #### checking here!!! \\\\
     if(verbose){ message(sprintf("###>>> start to join hap chunks ...")) } 
     if(length(haplist) > 1){
-        out <- join_dad_chunks(haplist, mom_array, progeny, ped, probs, verbose, unphased_mom=TRUE)
+        out <- join_dad_chunks(haplist, mom_array, progeny, ped, probs, verbose, unphased_mom=FALSE)
         if(verbose){ message(sprintf("###>>> Reduced chunks from [ %s ] to [ %s ]", length(haplist), length(out))) } 
         return(out)
     } else{
@@ -105,6 +105,9 @@ max_joint_1hap <- function(dad_hap, hapidx, mom_array, progeny, ped, unphased_mo
                 mom_haps <- list(mymom[mydix,]$hap1)
             }
             dad_hap <- c(dad_hap[[1]], dad_hap[[2]])
+            kid_geno <- progeny[[x]][[2]][myidx]
+            ####>>>
+            max_log_1hap_1kid(dad_hap, mom_haps, kid_geno)
             
         }else if(unphased_mom){ #unphased mom, default=TRUE
             mom_geno <- mymom[myidx]
@@ -137,6 +140,8 @@ max_joint_1hap <- function(dad_hap, hapidx, mom_array, progeny, ped, unphased_mo
                 myidx <- c(newidx1, newidx2)
                 mom_geno <- mymom[myidx]
                 het_idx <- which(mom_geno==1)
+            }else{
+                dad_hap <- c(dad_hap[[1]], dad_hap[[2]])
             }
 
             if(length(het_idx) > 0 ){
@@ -150,11 +155,13 @@ max_joint_1hap <- function(dad_hap, hapidx, mom_array, progeny, ped, unphased_mo
                     return(temhap)})
             }else if(length(het_idx)==0){
                 mom_haps <- list(mom_geno/2)
-            }   
-        }
-        kid_geno <- progeny[[x]][[2]][myidx]
-        ####>>>
-        max_log_1hap_1kid(dad_hap, mom_haps, kid_geno)
+            }
+            kid_geno <- progeny[[x]][[2]][myidx]
+            ####>>>
+            max_log_1hap_1kid(dad_hap, mom_haps, kid_geno)
+        }else{
+            0
+        }    
     })
     return(max(unlist(maxlog)))
 }
