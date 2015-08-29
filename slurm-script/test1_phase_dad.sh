@@ -10,4 +10,4 @@ nphased=5
 #R --no-save "--args $SLURM_JOB_ID" < profiling/1.test_codes/1.A.2_test_phase_mom.R
 R --no-save "--args $SLURM_JOB_ID $nphased" < profiling/1.test_codes/1.D.1_OX_test.R
 
-#sbatch -p serial slurm-script/test_phase_dad.sh 10?
+#sbatch -p serial slurm-script/test1_phase_dad.sh

@@ -24,8 +24,9 @@ dad_geno <- input[[1]]$geno
 mom_array <- input[[2]]
 progeny <- input[[3]]
 ped <- input[[4]]
+win_length
 
-newdad <- phasingDad(dad_geno, mom_array, progeny, ped, win_length=10, errors=c(0.02, 0.8), 
+newdad <- phasingDad(dad_geno, mom_array, progeny, ped, win_length, errors=c(0.02, 0.8), 
                      verbose=TRUE, unphased_mom=TRUE, join_len=10)
 #plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
 dad_phasing_error(newdad, simdad=input[[1]])
