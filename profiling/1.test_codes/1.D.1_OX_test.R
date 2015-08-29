@@ -6,7 +6,7 @@ args <- commandArgs(trailingOnly = TRUE)
 #crossovers=as.numeric(args[1]) # mean expected crossovers per chromosome; 0 = no recombination
 job=args[1]
 n_phased=as.numeric(character(args[2]))
-print(message("### job id [ %s ], phased mom [ %s ]", job, n_phased) )
+message(sprintf("### job id [ %s ], phased mom [ %s ]", job, n_phased) )
 
 ### loading all the functions in folder "lib"
 f <- sapply(list.files(pattern="[.]R$", path="lib", full.names=TRUE), source)
