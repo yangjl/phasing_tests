@@ -5,7 +5,7 @@ options(echo=TRUE) # if you want see commands in output file
 args <- commandArgs(trailingOnly = TRUE)
 #crossovers=as.numeric(args[1]) # mean expected crossovers per chromosome; 0 = no recombination
 job=args[1]
-n_phased=as.numeric(character(args[2]))
+n_phased=as.numeric(as.character(args[2]))
 message(sprintf("### job id [ %s ], phased mom [ %s ]", job, n_phased) )
 
 ### loading all the functions in folder "lib"
