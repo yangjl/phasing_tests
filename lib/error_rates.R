@@ -46,3 +46,22 @@ mom_phasing_error <- function(phasemom, sim){
     out$rate <- out$err/out$loci
     return(out)
 }
+#### dad phasing results
+dad_phasing_error <- function(newdad, simdad){
+    names(newdad)[3:4] <- c("ihap1", "ihap2")
+    
+    #### error estimation
+    outall <- cbind(newdad, simdad[newdad$idx, ])
+    err = 0
+    for(i in unique(outall$chunk)){
+        chunk <- subset(outall, chunk == i)
+        idx1 <- which.max(c(cor(chunk$ihap1, chunk$hap1), cor(chunk$ihap1, chunk$hap2)) )
+        err1 <- sum(chunk$ihap1 != chunk[, 4+idx1])
+        idx2 <- which.max(c(cor(chunk$ihap2, chunk$hap1), cor(chunk$ihap2, chunk$hap2)) )
+        err2 <- sum(chunk$ihap2 != chunk[, 4+idx2])
+        err <- err + err1 + err2
+    }
+    out <- data.frame(chunk=length(unique(outall$chunk)), err=err, loci=2*nrow(outall))
+    out$rate <- out$err/out$loci
+    return(out)
+}

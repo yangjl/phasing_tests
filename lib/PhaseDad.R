@@ -52,7 +52,7 @@ join_dad_chunks <- function(haplist, mom_array, progeny, ped, probs, verbose, un
         dad_haps_lofl <- list(list(oldchunk[[1]], newchunk[[1]]), list(oldchunk[[1]], newchunk[[2]]))
         
         ## link previous and current chunks
-        temhap <- link_dad_haps(dad_haps_lofl, hapidx, mom_array, progeny, ped, unphased_mom, join_len)
+        temhap <- link_dad_haps(dad_haps_lofl, hapidx, mom_array, progeny, ped, unphased_mom, join_len, probs)
         temhap <- c(temhap[[1]], temhap[[2]])
         if(!is.null(temhap)){
             outold <- outhaplist[[i]][[1]]
