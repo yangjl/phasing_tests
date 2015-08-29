@@ -19,7 +19,7 @@ input <- simOX_input(sim, n_phased=5, n_chunk=3)
 ###>>> [[3]]: outcrossed progeny [ N=10 ] (list of list(real, obs))
 ###>>> [[4]]: pedigree (data.frame)
 
-dad_geno <- input[[1]]
+dad_geno <- input[[1]]$geno
 mom_array <- input[[2]]
 progeny <- input[[3]]
 ped <- input[[4]]
@@ -27,17 +27,11 @@ win_length=10
 errors=c(0.02, 0.8)
 verbose=TRUE
 
-newdad <- phasingDad(dad_geno, mom_array, progeny, win_length, verbose=FALSE)
+newdad <- phasingDad(dad_geno, mom_array, progeny, ped, win_length=10, errors=c(0.02, 0.8), 
+                     verbose=TRUE, unphased_mom=TRUE, join_len=10)
 #plotphasing(sim, kids=1:5, snps=1:1000, cols=c("red", "blue"), plotphasing=TRUE, newmom)
 
-pm <- write_mom(newmom)
+
 save(file=paste0("largedata/testout/", job, "_phasemom.RData"), list=c("sim","pm"))
-
-#ob <- load("largedata/lcached.RData")
-#simk <- get_sim_kids(sim)
-imputek <- imputing(momphase=pm, progeny, winstart=10, winend=500, stepsize=10, expect_recomb=1.5, verbose=TRUE)
-rates <- kids_errs(simk=sim[[2]], imputek)
-
-save(file=paste0("largedata/testout/", job, "_imputekid.RData"), list=c("sim","pm", "imputek", "rates"))
 
 

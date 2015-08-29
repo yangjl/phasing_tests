@@ -18,8 +18,8 @@ simOX_input <- function(sim, n_phased=5, n_chunk=1){
     ### object of sim: output a list of three, [[1]] data.frame of simulated dad [[2]] list of simulated mom
     ### [[3]] list of simulated kids, [[3]][[n=10]], [[[1]] breakpoints of hap1 and hap2 [[2]] data.frame of kid genotype
     
-    unphased_dad <- sim[[1]]$hap1 + sim[[1]]$hap2 
-    
+    #unphased_dad <- sim[[1]]$hap1 + sim[[1]]$hap2 
+    true_dad <- data.frame(hap1=sim[[1]]$hap1, hap2=sim[[1]]$hap2, geno=sim[[1]]$hap1 + sim[[1]]$hap2)
     if(n_phased > 0){
         mom <- sim[[2]][1:n_phased]
         for(i in 1:n_phased){
@@ -44,11 +44,11 @@ simOX_input <- function(sim, n_phased=5, n_chunk=1){
     #### pedigree info
     ped <- data.frame(kid=1:length(progeny), dad=1, mom=1:length(mom))
     
-    message(sprintf("###>>> [[1]]: unphased dad (vector)"))
+    message(sprintf("###>>> [[1]]: unphased dad (data.frame)"))
     message(sprintf("###>>> [[2]]: phased and unphased mom [ N=%s+%s ] (list of data.frame + vector)", n_phased, length(sim[[2]])-n_phased ))
     message(sprintf("###>>> [[3]]: outcrossed progeny [ N=%s ] (list of list(real, obs))", length(progeny)))
     message(sprintf("###>>> [[4]]: pedigree (data.frame)", length(progeny)))
-    return(list(unphased_dad, mom, progeny, ped))
+    return(list(true_dad, mom, progeny, ped))
 }
 
 frq <- function(progeny){
