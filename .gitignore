@@ -7,3 +7,4 @@ phasing_tests.Rproj
 .RData
 slurm/*
 largedata/*
+slurm-log/*

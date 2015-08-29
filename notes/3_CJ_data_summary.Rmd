@@ -50,6 +50,15 @@ pinfo <- read.table("../data/parentage_sum.txt", header=TRUE)
 subset(pinfo, !is.na(WGS))
 subset(pinfo, nox < 30)
 
+par(mfrow=c(1,1))
+counts <- pinfo[, c("nselfer", "nox")]
+counts[is.na(counts)] <- 0
+counts$tot <- counts$nselfer + counts$nox
+counts <- counts[order(counts$tot, decreasing=TRUE), ]
+counts <- as.matrix(t(counts[,1:2]))
+barplot(counts, main="Size Distribution", xlab="families", col=c("darkblue","red"), 
+        legend = c("size of selfing", "size of outcrossing"))
+
 ```
 
 We calculated the number of selfers and the number of outcrossers associated with the founder lines. In total, `r nrow(pinfo)` unique founder lines were involved in the crosses. Among them, `r nrow(subset(pinfo, !is.na(nselfer)))` founder lines had selfing families; and the bottom ten smallest family had their family size of `r head(sort(pinfo$nselfer[!is.na(pinfo$nselfer)]), 10)`, respectively.   
