@@ -32,6 +32,6 @@ newdad <- phasingDad(dad_geno, mom_array, progeny, ped, win_length, errors=c(0.0
 dad_phasing_error(newdad, simdad=input[[1]])
 
 
-save(file=paste0("largedata/testout/", job, "_phasemom.RData"), list=c("sim","pm"))
+save(file=paste0("largedata/testout/", job, "_phasemom.RData"), list=c("sim","newdad"))
 
 
