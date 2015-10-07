@@ -43,6 +43,12 @@ get_info <- function(){
     info <- data.frame(snpid=rownames(geno(teo)), ref=ref(teo), alt=alt)
     info <- merge(info, pos, by.x="snpid", by.y="row.names")
     
+    sites <- subset(info, seqnames !=0) 
+    sites <- sites[, c("seqnames", "start", "ref", "alt")]
+    sites <- sites[order(sites$seqnames, sites$start), ]
+    sites <- subset(sites, ref != "-" & alt != "-")
+    write.table(sites, "largedata/genotype_calls/gbs_sites_v2.txt", sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
+    
     ### get genotype matrix
     genos <- geno(teo)
     

@@ -26,10 +26,16 @@ inferred_mom=1 -> 00, 2->01, 3->11
 6. mom + dad
 
 # To Do List:
-1. ~~impute Mom~~ v
-2. ~~phase Mom~~ v
+1. Impute Mom ? currently use perfect mom called from WGS data.
+2. ~~phase Mom~~ v do something about the unphased region.
 3. ~~phase Kids~~ x
-4. impute Kids: with certain Mb window; HMM
+4. ~~impute Kids~~ v
+5. phase Dad
+
+
+# On Readl Data
+1. real data: call genotypes on AGPv2; remove "-"? ANGSD could not deal with "InDel"?
+2. impute genotype of Mom? 
 
 
 -----------

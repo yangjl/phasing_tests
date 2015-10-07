@@ -6,13 +6,13 @@
 phasing <- function(estimated_mom, progeny, win_length, verbose=FALSE){
     
     mom_haps <- setup_haps(win_length) 
-    if(verbose){ message(sprintf(">>> start to phase hap chunks ...")) }
+    if(verbose){ message(sprintf("###>>> start to phase hap chunks ...")) }
     haplist <- phase_mom_chuck(estimated_mom, progeny, win_length, verbose, mom_haps)
     
-    if(verbose){ message(sprintf(">>> start to join hap chunks ...")) } 
+    if(verbose){ message(sprintf("###>>> start to join hap chunks ...")) } 
     if(length(haplist) > 1){
         out <- joint_mom_chunk(haplist, verbose)
-        if(verbose){ message(sprintf(">>> Reduced chunks from [ %s ] to [ %s ]", length(haplist), length(out))) } 
+        if(verbose){ message(sprintf("###>>> Reduced chunks from [ %s ] to [ %s ]", length(haplist), length(out))) } 
         return(out)
     }
     else{
@@ -279,16 +279,4 @@ write_mom <- function(newmom){
         momdf <- rbind(momdf, tem)
     }
     return(momdf)
-}
-
-print_progress <- function(){
-    total <- 20
-    # create progress bar
-    pb <- txtProgressBar(min = 0, max = total, style = 3)
-    for(i in 1:total){
-        Sys.sleep(0.1)
-        # update progress bar
-        setTxtProgressBar(pb, i)
-    }
-    close(pb)
 }
